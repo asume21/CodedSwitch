@@ -1,0 +1,32 @@
+{
+    "sql_injection": {
+        "pattern": "mysql_query|mysqli_query|PDO::query",
+        "severity": "HIGH",
+        "description": "Potential SQL injection vulnerability. Use prepared statements or parameterized queries."
+    },
+    "command_injection": {
+        "pattern": "exec|system|passthru|shell_exec|`.*`",
+        "severity": "HIGH", 
+        "description": "Command injection vulnerability. Avoid using shell commands with user input."
+    },
+    "xss": {
+        "pattern": "echo.*\\$_GET|echo.*\\$_POST|print.*\\$_GET|print.*\\$_POST",
+        "severity": "MEDIUM",
+        "description": "Cross-site scripting (XSS) vulnerability. Use htmlspecialchars() or similar functions."
+    },
+    "file_inclusion": {
+        "pattern": "include.*\\$_GET|require.*\\$_GET|include_once.*\\$_GET|require_once.*\\$_GET",
+        "severity": "HIGH",
+        "description": "File inclusion vulnerability. Validate file paths and use whitelisting."
+    },
+    "file_upload": {
+        "pattern": "move_uploaded_file",
+        "severity": "MEDIUM",
+        "description": "Insecure file upload. Validate file types, use secure file names."
+    },
+    "sensitive_data": {
+        "pattern": "password|secret|token|key",
+        "severity": "LOW",
+        "description": "Sensitive data exposure. Avoid hardcoding sensitive information."
+    }
+}

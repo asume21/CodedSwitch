@@ -1,0 +1,194 @@
+[
+    {
+        "id": "sql_injection_1",
+        "category": "sql_injection",
+        "regex": "cursor\\.execute\\s*\\([^)]*(?:\\+|%|{)",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "SQL injection vulnerability detected. Direct string interpolation in SQL queries can lead to SQL injection attacks. Use parameterized queries instead."
+    },
+    {
+        "id": "sql_injection_2",
+        "category": "sql_injection",
+        "regex": "SELECT.*FROM.*WHERE.*=.*\\+.*\\+",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "SQL injection vulnerability detected. Direct string concatenation in SQL queries can lead to SQL injection attacks. Use parameterized queries instead."
+    },
+    {
+        "id": "sql_injection_3",
+        "category": "sql_injection",
+        "regex": "SELECT.*FROM.*WHERE.*=.*%s",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "SQL injection vulnerability detected. Using %s format specifier in SQL queries can lead to SQL injection attacks. Use parameterized queries instead."
+    },
+    {
+        "id": "sql_injection_4",
+        "category": "sql_injection",
+        "regex": "execute.*\\(.*%s.*\\)",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "SQL injection vulnerability detected. Using %s format specifier in SQL queries can lead to SQL injection attacks. Use parameterized queries instead."
+    },
+    {
+        "id": "sql_injection_5",
+        "category": "sql_injection",
+        "regex": "query.*\\(.*%s.*\\)",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "SQL injection vulnerability detected. Using %s format specifier in SQL queries can lead to SQL injection attacks. Use parameterized queries instead."
+    },
+    {
+        "id": "xss_1",
+        "category": "xss",
+        "regex": "print.*\\(.*\\{.*\\}.*\\)",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "description": "Potential XSS vulnerability detected. Direct output of user input without proper escaping can lead to Cross-Site Scripting attacks. Use proper escaping functions or template escaping."
+    },
+    {
+        "id": "xss_2",
+        "category": "xss",
+        "regex": "f\".*\\{.*\\}.*\"",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "description": "Potential XSS vulnerability detected. Direct output of user input without proper escaping can lead to Cross-Site Scripting attacks. Use proper escaping functions or template escaping."
+    },
+    {
+        "id": "xss_3",
+        "category": "xss",
+        "regex": "response\\.write.*\\(.*\\)",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "description": "Potential XSS vulnerability detected. Direct output of user input without proper escaping can lead to Cross-Site Scripting attacks. Use proper escaping functions or template escaping."
+    },
+    {
+        "id": "xss_4",
+        "category": "xss",
+        "regex": "render.*\\(.*\\)",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "description": "Potential XSS vulnerability detected. Direct output of user input without proper escaping can lead to Cross-Site Scripting attacks. Use proper escaping functions or template escaping."
+    },
+    {
+        "id": "xss_5",
+        "category": "xss",
+        "regex": "template\\.render.*\\(.*\\)",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "description": "Potential XSS vulnerability detected. Direct output of user input without proper escaping can lead to Cross-Site Scripting attacks. Use proper escaping functions or template escaping."
+    },
+    {
+        "id": "command_injection_1",
+        "category": "command_injection",
+        "regex": "os\\.system.*\\(.*\\)",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "Command injection vulnerability detected. Direct use of user input in system commands can lead to command injection attacks. Use proper command argument handling or subprocess module with argument lists."
+    },
+    {
+        "id": "command_injection_2",
+        "category": "command_injection",
+        "regex": "subprocess\\.call.*\\(.*\\)",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "Command injection vulnerability detected. Direct use of user input in system commands can lead to command injection attacks. Use proper command argument handling or subprocess module with argument lists."
+    },
+    {
+        "id": "command_injection_3",
+        "category": "command_injection",
+        "regex": "subprocess\\.run.*\\(.*\\)",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "Command injection vulnerability detected. Direct use of user input in system commands can lead to command injection attacks. Use proper command argument handling or subprocess module with argument lists."
+    },
+    {
+        "id": "command_injection_4",
+        "category": "command_injection",
+        "regex": "subprocess\\.Popen.*\\(.*\\)",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "Command injection vulnerability detected. Direct use of user input in system commands can lead to command injection attacks. Use proper command argument handling or subprocess module with argument lists."
+    },
+    {
+        "id": "command_injection_5",
+        "category": "command_injection",
+        "regex": "shell=True",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "Command injection vulnerability detected. Direct use of user input in system commands can lead to command injection attacks. Use proper command argument handling or subprocess module with argument lists."
+    },
+    {
+        "id": "path_traversal_1",
+        "category": "path_traversal",
+        "regex": "os\\.path\\.join.*\\(.*\\)",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "description": "Potential path traversal vulnerability detected. Direct use of user input in file paths can lead to unauthorized file access. Use proper path sanitization or validation."
+    },
+    {
+        "id": "path_traversal_2",
+        "category": "path_traversal",
+        "regex": "open.*\\(.*\\)",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "description": "Potential path traversal vulnerability detected. Direct use of user input in file paths can lead to unauthorized file access. Use proper path sanitization or validation."
+    },
+    {
+        "id": "path_traversal_3",
+        "category": "path_traversal",
+        "regex": "file.*\\(.*\\)",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "description": "Potential path traversal vulnerability detected. Direct use of user input in file paths can lead to unauthorized file access. Use proper path sanitization or validation."
+    },
+    {
+        "id": "path_traversal_4",
+        "category": "path_traversal",
+        "regex": "read.*\\(.*\\)",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "description": "Potential path traversal vulnerability detected. Direct use of user input in file paths can lead to unauthorized file access. Use proper path sanitization or validation."
+    },
+    {
+        "id": "path_traversal_5",
+        "category": "path_traversal",
+        "regex": "write.*\\(.*\\)",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "description": "Potential path traversal vulnerability detected. Direct use of user input in file paths can lead to unauthorized file access. Use proper path sanitization or validation."
+    },
+    {
+        "id": "buffer_overflow_1",
+        "category": "buffer_overflow",
+        "regex": "\\[\\d+\\]",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "Potential buffer overflow vulnerability detected. Fixed-size buffers with user input can lead to buffer overflow attacks. Use proper bounds checking or dynamic arrays."
+    },
+    {
+        "id": "buffer_overflow_2",
+        "category": "buffer_overflow",
+        "regex": "\\* \\d+",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "Potential buffer overflow vulnerability detected. Fixed-size buffers with user input can lead to buffer overflow attacks. Use proper bounds checking or dynamic arrays."
+    },
+    {
+        "id": "buffer_overflow_3",
+        "category": "buffer_overflow",
+        "regex": "array.*\\(.*\\)",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "Potential buffer overflow vulnerability detected. Fixed-size buffers with user input can lead to buffer overflow attacks. Use proper bounds checking or dynamic arrays."
+    },
+    {
+        "id": "buffer_overflow_4",
+        "category": "buffer_overflow",
+        "regex": "buffer.*\\(.*\\)",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "description": "Potential buffer overflow vulnerability detected. Fixed-size buffers with user input can lead to buffer overflow attacks. Use proper bounds checking or dynamic arrays."
+    }
+]

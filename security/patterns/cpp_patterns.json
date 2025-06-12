@@ -1,0 +1,27 @@
+{
+    "buffer_overflow": {
+        "pattern": "strcpy|strcat|gets|sprintf",
+        "severity": "HIGH",
+        "description": "Potential buffer overflow vulnerability. Use safer alternatives like strncpy or std::string."
+    },
+    "memory_leak": {
+        "pattern": "malloc|calloc|realloc|free",
+        "severity": "MEDIUM",
+        "description": "Potential memory leak. Use smart pointers or RAII patterns."
+    },
+    "null_dereference": {
+        "pattern": "->|.* = NULL",
+        "severity": "HIGH",
+        "description": "Potential null pointer dereference. Check pointers before use."
+    },
+    "integer_overflow": {
+        "pattern": "\\+\\+|--|\\*=|\\+=",
+        "severity": "MEDIUM",
+        "description": "Potential integer overflow. Use bounds checking."
+    },
+    "uninitialized_variable": {
+        "pattern": "int [a-zA-Z_][a-zA-Z0-9_]*;",
+        "severity": "LOW",
+        "description": "Uninitialized variable. Initialize variables before use."
+    }
+}
