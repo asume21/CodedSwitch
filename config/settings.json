@@ -1,0 +1,11 @@
+{
+  "theme": "Dark",
+  "font_size": 8,
+  "model": "gemini-2.5-flash",
+  "auto_save": true,
+  "window_geometry": "1536x821+-27+24",
+  "last_source_lang": "Python",
+  "last_target_lang": "JavaScript",
+  "audio_enabled": true,
+  "auto_cleanup_temp": true
+}

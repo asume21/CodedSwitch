@@ -1,6 +1,149 @@
-# 🚀 AI Code Translator - Universal Code Translation & Security Platform
+# CodedSwitch - AI Code Translator
 
-> **Transform any code to any language with AI-powered security scanning built-in**
+A powerful AI-powered code translation tool with advanced features including multi-language code translation, AI chatbot assistance, security vulnerability scanning, and lyric generation.
+
+## 🚀 Quick Start
+
+### Option 1: Easy Setup (Recommended)
+1. Run the setup script:
+   ```bash
+   python setup_and_run.py
+   ```
+   This will automatically install dependencies and guide you through setup.
+
+### Option 2: Manual Setup
+
+#### Prerequisites
+- Python 3.8 or higher
+- pip (Python package installer)
+
+#### Installation
+1. Install required dependencies:
+   ```bash
+   pip install ttkbootstrap google-generativeai requests
+   ```
+
+2. Set up your API key (optional but recommended):
+   ```bash
+   # Windows Command Prompt
+   set GEMINI_API_KEY=your_api_key_here
+   
+   # Windows PowerShell
+   $env:GEMINI_API_KEY="your_api_key_here"
+   
+   # Linux/Mac
+   export GEMINI_API_KEY=your_api_key_here
+   ```
+
+3. Run the application:
+   ```bash
+   python main.py
+   ```
+
+## 🔧 Fixed Issues
+
+This version includes fixes for:
+- ✅ Import structure problems
+- ✅ Missing dependency handling
+- ✅ Graceful fallbacks when optional features aren't available
+- ✅ Improved error handling and logging
+- ✅ Simplified audio dependencies (optional)
+
+## 📋 Features
+
+### Core Features (Always Available)
+- **Code Translation**: Convert code between programming languages
+- **AI Chatbot**: Get programming help and explanations
+- **Security Scanner**: Basic code vulnerability detection
+- **Lyric Lab**: Creative content generation
+
+### Enhanced Features (With API Key)
+- **Advanced AI Translation**: High-quality code translation using Gemini AI
+- **Intelligent Chatbot**: Comprehensive programming assistance
+- **AI-Powered Analysis**: Advanced code analysis and suggestions
+
+## 🔑 Getting an API Key
+
+1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Set it as an environment variable or in a `.env` file
+
+## 📁 File Structure
+
+```
+CodedSwitch/
+├── main.py                 # Main application entry point
+├── integrated_ai.py        # AI interface module
+├── setup_and_run.py       # Easy setup script
+├── requirements.txt        # Dependencies list
+├── gui_modules/           # GUI components
+│   ├── main_gui.py        # Main GUI class
+│   ├── translator_tab.py  # Translation interface
+│   ├── chatbot_tab.py     # AI chat interface
+│   ├── security_tab.py    # Security scanner
+│   ├── lyric_lab_tab.py   # Lyric generation
+│   ├── constants.py       # App constants
+│   └── utils.py           # Utility functions
+└── logs/                  # Application logs (created automatically)
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**"ModuleNotFoundError" for ttkbootstrap or google-generativeai**
+```bash
+pip install --upgrade ttkbootstrap google-generativeai requests
+```
+
+**"AI Not Available" message**
+- Make sure your API key is set correctly
+- Check that you have an internet connection
+- Verify your API key is valid at Google AI Studio
+
+**Import errors for GUI modules**
+- The app includes fallback components that work even if some modules have issues
+- Try running `python setup_and_run.py` for automatic setup
+
+**Application won't start**
+1. Check Python version: `python --version` (need 3.8+)
+2. Reinstall dependencies: `pip install -r requirements.txt`
+3. Check the logs folder for detailed error information
+
+### Performance Tips
+
+- The app works offline with basic pattern-matching for code translation
+- AI features require an internet connection and API key
+- For best performance, ensure you have a stable internet connection
+
+## 🎯 Usage Tips
+
+1. **Code Translation**: Paste your code in the left panel, select languages, and click Translate
+2. **AI Chat**: Ask programming questions, get code explanations, or request help
+3. **Security Scanner**: Paste code to check for common vulnerabilities
+4. **Lyric Lab**: Generate creative content and lyrics with AI assistance
+
+## 📝 Version History
+
+- **v2.0.0 (Fixed)**: Resolved import issues, improved error handling, optional dependencies
+- **v2.0.0**: Original advanced version with full features
+- **v1.0.0**: Initial release
+
+## 🤝 Support
+
+If you encounter issues:
+1. Check the troubleshooting section above
+2. Review the logs in the `logs/` folder
+3. Ensure all dependencies are properly installed
+4. Try the setup script: `python setup_and_run.py`
+
+## 📄 License
+
+© 2024 CodedSwitch Team - Educational and personal use
+
+---
+
+**Enjoy coding with CodedSwitch! 🚀****
 
 ![AI Code Translator](https://img.shields.io/badge/Status-Production%20Ready-brightgreen) ![Python](https://img.shields.io/badge/Python-3.11+-blue) ![License](https://img.shields.io/badge/License-MIT-green)
 

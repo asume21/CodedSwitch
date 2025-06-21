@@ -1,0 +1,224 @@
+#!/usr/bin/env python3
+"""
+Beat Studio Demo Script
+Test the Advanced Beat Studio features
+"""
+
+import tkinter as tk
+import ttkbootstrap as ttk
+import sys
+import os
+
+def demo_beat_studio():
+    """Demo the Advanced Beat Studio independently."""
+    
+    print("🎵 CodedSwitch Advanced Beat Studio Demo")
+    print("=" * 50)
+    
+    # Create demo window
+    root = ttk.Window(themename="superhero")
+    root.title("Beat Studio Demo")
+    root.geometry("800x600")
+    
+    # Main frame
+    main_frame = ttk.Frame(root)
+    main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+    
+    # Header
+    header_label = ttk.Label(main_frame, text="🎵 Advanced Beat Studio Demo", 
+                            font=('Arial', 18, 'bold'))
+    header_label.pack(pady=(0, 20))
+    
+    # Demo info
+    info_text = """
+🚀 PROFESSIONAL MUSIC PRODUCTION FEATURES:
+
+✨ Multi-Track Sequencer
+• 8 professional tracks (Kick, Snare, Hi-hat, etc.)
+• 16-step pattern editor with visual feedback
+• Real-time beat editing with mouse clicks
+• BPM control (60-200) with swing adjustment
+
+🎹 Piano Roll Melody Editor  
+• Full piano roll interface with note editing
+• Multiple melody tracks with different instruments
+• Music theory integration (7 scales, 12 keys)
+• ADSR envelopes for realistic sound
+
+🎚️ Professional Mixer
+• Individual channel strips with EQ
+• Send effects (Reverb, Delay)
+• Mute/Solo controls per track
+• Master volume with professional range
+
+🤖 AI Music Assistant
+• Intelligent beat generation in 8 styles
+• AI-powered melody composition
+• Custom prompt support for any musical idea
+• Music theory-aware suggestions
+
+🔊 Advanced Audio Engine
+• Real-time synthesis and playback
+• 44.1kHz/16-bit professional quality
+• Multi-channel mixing with effects
+• WAV export for external use
+
+📁 Project Management
+• Save/Load projects as JSON
+• Export professional WAV files
+• Session management with auto-save
+    """
+    
+    from ttkbootstrap.scrolled import ScrolledText
+    info_display = ScrolledText(main_frame, wrap=tk.WORD, height=20, font=('Arial', 10))
+    info_display.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
+    info_display.insert("1.0", info_text)
+    info_display.config(state='disabled')
+    
+    # Action buttons
+    button_frame = ttk.Frame(main_frame)
+    button_frame.pack(fill=tk.X)
+    
+    def launch_beat_studio():
+        """Launch the actual Beat Studio."""
+        try:
+            # Import and launch Beat Studio
+            sys.path.append(os.path.dirname(__file__))
+            from advanced_beat_studio import AdvancedBeatStudio
+            
+            # Create a mock parent for demo
+            class MockParent:
+                def __init__(self):
+                    self.ai_interface = None
+            
+            mock_parent = MockParent()
+            studio = AdvancedBeatStudio(mock_parent, None)
+            
+            tk.messagebox.showinfo("Success!", "🎵 Beat Studio launched successfully!")
+            
+        except ImportError as e:
+            tk.messagebox.showwarning("Dependencies", 
+                f"Beat Studio requires additional dependencies:\n\n"
+                f"pip install pygame numpy scipy\n\n"
+                f"Error: {e}")
+        except Exception as e:
+            tk.messagebox.showerror("Error", f"Failed to launch Beat Studio: {e}")
+    
+    def show_installation():
+        """Show installation instructions."""
+        install_text = """
+🔧 INSTALLATION GUIDE:
+
+1️⃣ Install Core Dependencies:
+pip install pygame numpy scipy
+
+2️⃣ Optional (Advanced Features):
+pip install sounddevice soundfile
+
+3️⃣ Add to CodedSwitch:
+• Copy advanced_beat_studio.py to your CodedSwitch directory
+• Update menu_handlers.py with the new version
+• Restart CodedSwitch
+
+4️⃣ Launch:
+• Tools Menu → "Beat Studio"
+• Professional interface opens
+• Start creating music!
+
+🎯 WHAT WORKS:
+✅ Basic Mode: UI and controls (no dependencies)
+✅ Audio Mode: Full synthesis (pygame + numpy)  
+✅ Pro Mode: Effects and export (+ scipy)
+✅ Studio Mode: Recording features (+ sounddevice)
+
+The Beat Studio gracefully handles missing dependencies!
+        """
+        
+        install_window = tk.Toplevel(root)
+        install_window.title("Installation Guide")
+        install_window.geometry("600x500")
+        
+        install_display = ScrolledText(install_window, wrap=tk.WORD, font=('Arial', 10))
+        install_display.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        install_display.insert("1.0", install_text)
+        install_display.config(state='disabled')
+    
+    def test_features():
+        """Test individual features."""
+        features_text = """
+🧪 FEATURE TESTING CHECKLIST:
+
+🥁 SEQUENCER TESTS:
+□ Click pattern grid squares to add/remove beats
+□ Adjust BPM slider (60-200 range)
+□ Test swing control for groove
+□ Try different pattern lengths (8/16/32/64)
+□ Use track volume and pitch controls
+□ Test mute/solo buttons
+
+🎹 MELODY EDITOR TESTS:  
+□ Click piano roll to add notes
+□ Drag notes to change length
+□ Right-click to delete notes
+□ Switch between melody tracks
+□ Change key and scale settings
+□ Generate melodies with AI
+
+🎚️ MIXER TESTS:
+□ Adjust individual track volumes
+□ Test EQ controls (High/Mid/Low)
+□ Add reverb and delay sends
+□ Use master volume fader
+□ Test mute/solo on mixer
+
+🤖 AI ASSISTANT TESTS:
+□ Generate beats in different styles
+□ Create melodies with AI
+□ Try custom prompts
+□ Apply AI suggestions to tracks
+
+🔊 PLAYBACK TESTS:
+□ Play/pause/stop transport
+□ Test loop functionality
+□ Monitor playback position
+□ Check audio quality
+
+💾 PROJECT TESTS:
+□ Save project to JSON
+□ Load existing project
+□ Export to WAV format
+□ Test file management
+
+Ready to test? Click "Launch Beat Studio" above!
+        """
+        
+        test_window = tk.Toplevel(root)
+        test_window.title("Feature Testing")
+        test_window.geometry("600x600")
+        
+        test_display = ScrolledText(test_window, wrap=tk.WORD, font=('Arial', 10))
+        test_display.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        test_display.insert("1.0", features_text)
+        test_display.config(state='disabled')
+    
+    # Buttons
+    ttk.Button(button_frame, text="🚀 Launch Beat Studio", 
+              command=launch_beat_studio, bootstyle="success").pack(side=tk.LEFT, padx=5)
+    
+    ttk.Button(button_frame, text="📦 Installation Guide", 
+              command=show_installation, bootstyle="info").pack(side=tk.LEFT, padx=5)
+    
+    ttk.Button(button_frame, text="🧪 Test Features", 
+              command=test_features, bootstyle="primary").pack(side=tk.LEFT, padx=5)
+    
+    ttk.Button(button_frame, text="❌ Close Demo", 
+              command=root.destroy, bootstyle="danger").pack(side=tk.RIGHT, padx=5)
+    
+    # Status
+    status_label = ttk.Label(main_frame, text="🎵 Ready to explore professional music production!")
+    status_label.pack(pady=10)
+    
+    root.mainloop()
+
+if __name__ == "__main__":
+    demo_beat_studio()

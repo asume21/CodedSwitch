@@ -1,52 +1,26 @@
-google-generativeai>=0.3.0
-grpcio>=1.66.0
+# Core GUI and Application Dependencies
+# Removed tkinter as it is part of the standard library and not needed via pip
 ttkbootstrap>=1.10.1
-pygments>=2.16.1
-python-dotenv>=1.0.0
+
+# AI and HTTP
+google-generativeai>=0.3.0
+grpcio>=1.66.0  # Required for google-generativeai
 requests>=2.31.0
-jsonschema>=4.19.0
-# Core AI and API Dependencies
-google-generativeai>=0.3.0,<1.0.0
-grpcio>=1.66.0,<2.0.0
 
-# GUI and Interface
-ttkbootstrap>=1.10.1,<2.0.0
-Pillow>=10.0.0,<11.0.0  # For image handling and icons
+# Basic Dependencies (always required)
+# Removed standard library modules as they are included with Python and not needed via pip
+python-dotenv>=1.0.0  # For environment variable management
 
-# Code Processing and Syntax Highlighting  
-pygments>=2.16.1,<3.0.0
+# Optional Audio Dependencies (install separately if needed)
+# Uncomment these lines if you want full audio features:
+# pygame>=2.5.0
+# numpy>=1.24.0
+# scipy>=1.10.0
+# sounddevice>=0.4.6
+# soundfile>=0.12.1
 
-# Configuration and Environment
-python-dotenv>=1.0.0,<2.0.0
-
-# HTTP and API Requests
-requests>=2.31.0,<3.0.0
-urllib3>=1.26.0,<3.0.0
-
-# Data Validation and Parsing
-jsonschema>=4.19.0,<5.0.0
-
-# Error Handling and Logging (Production)
-sentry-sdk>=1.38.0,<2.0.0  # Error tracking
-loguru>=0.7.0,<1.0.0      # Better logging
-
-# Performance and Async (Production)
-aiohttp>=3.9.0,<4.0.0     # Async HTTP requests
-asyncio-throttle>=1.0.2,<2.0.0  # Rate limiting
-
-# File and Data Processing
-pandas>=2.0.0,<3.0.0      # Data analysis (for scan reports)
-openpyxl>=3.1.0,<4.0.0    # Excel export functionality
-
-# Security and Encryption
-cryptography>=41.0.0,<42.0.0  # Secure credential storage
-bcrypt>=4.0.0,<5.0.0      # Password hashing
-
-# Development Dependencies (optional - install with pip install -r requirements-dev.txt)
-# pytest>=7.4.0,<8.0.0
-# black>=23.0.0,<24.0.0
-# flake8>=6.0.0,<7.0.0
-# mypy>=1.6.0,<2.0.0
+# Development and Optional
+typing_extensions>=4.0.0  # For better type hints
 
 # Platform-specific dependencies
 # Windows

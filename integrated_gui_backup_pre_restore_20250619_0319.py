@@ -499,11 +499,6 @@ class IntegratedTranslatorGUI:
         self._setup_chatbot_tab()
         self._setup_security_tab()
         self._setup_lyric_lab_tab()
-        # Optional: add the professional Beat Studio tab if the integration is available
-        try:
-            self._setup_beat_studio_if_available()
-        except Exception as e:
-            root_logger.warning(f"Beat Studio setup skipped: {e}")
         
         # Initialize AI interface
         self._initialize_ai_interface()
@@ -528,15 +523,6 @@ class IntegratedTranslatorGUI:
                     self.root.iconbitmap(default=icon_path)
                 except Exception as e:
                     logger.warning(f"Failed to set icon: {e}")
-
-    def _setup_beat_studio_if_available(self):
-        """Add the Beat Studio tab to the notebook if the integration is available."""
-        if beat_studio_integration and getattr(beat_studio_integration, "add_beat_studio_tab", None):
-            try:
-                beat_studio_integration.add_beat_studio_tab(self.notebook, self)
-                root_logger.info("Beat Studio tab initialized.")
-            except Exception as e:
-                root_logger.warning(f"Beat Studio initialization failed: {e}")
 
     def _initialize_ai_interface(self):
         """Initialize the AI interface with better error handling."""
@@ -1113,15 +1099,13 @@ class IntegratedTranslatorGUI:
             state=tk.DISABLED
         )
         self.chat_display.pack(fill=tk.BOTH, expand=True)
-        # Direct reference to the underlying Text widget for reliable operations
-        self.chat_text = getattr(self.chat_display, "text", self.chat_display)
 
         # Configure enhanced text tags for different message types
-        self.chat_text.tag_configure("user_msg", foreground="#2196F3", font=("Segoe UI", self.font_size, "bold"))
-        self.chat_text.tag_configure("assistant_msg", foreground="#4CAF50", font=("Segoe UI", self.font_size))
-        self.chat_text.tag_configure("system_msg", foreground="#FF9800", font=("Segoe UI", self.font_size - 1, "italic"))
-        self.chat_text.tag_configure("error_msg", foreground="#F44336", font=("Segoe UI", self.font_size, "bold"))
-        self.chat_text.tag_configure("timestamp", foreground="#757575", font=("Segoe UI", self.font_size - 2))
+        self.chat_display.tag_configure("user_msg", foreground="#2196F3", font=("Segoe UI", self.font_size, "bold"))
+        self.chat_display.tag_configure("assistant_msg", foreground="#4CAF50", font=("Segoe UI", self.font_size))
+        self.chat_display.tag_configure("system_msg", foreground="#FF9800", font=("Segoe UI", self.font_size - 1, "italic"))
+        self.chat_display.tag_configure("error_msg", foreground="#F44336", font=("Segoe UI", self.font_size, "bold"))
+        self.chat_display.tag_configure("timestamp", foreground="#757575", font=("Segoe UI", self.font_size - 2))
 
         # Enhanced input area
         input_frame = ttk.LabelFrame(main_frame, text="✍️ Your Message", padding=10)
@@ -4266,15 +4250,15 @@ What would you like to work on today? 🚀"""
                 if first_visible < 1.0:  # If not at the end
                     self.chat_display.yview_moveto(first_visible)
                 else:
-                    self.chat_text.see(tk.END)
+                    self.chat_display.see(tk.END)
                 
                 # Disable editing
-                text_widget.configure(state='disabled')
+                self.chat_display.configure(state='disabled')
         except Exception as e:
             logger.error(f"Error in _add_welcome_message: {str(e)}")
             # Try to recover by just disabling the widget
             try:
-                text_widget.configure(state='disabled')
+                self.chat_display.configure(state='disabled')
             except:
                 pass
 
@@ -4366,32 +4350,32 @@ Click any example or type your own question! 🎯"""
         """Add message to chat with timestamp."""
         timestamp = datetime.now().strftime("%H:%M")
         
-        self.chat_text.config(state=tk.NORMAL)
+        self.chat_display.config(state=tk.NORMAL)
         
         # Add sender and timestamp
         sender_text = f"[{timestamp}] {sender}: "
-        self.chat_text.insert(tk.END, sender_text, "timestamp")
+        self.chat_display.insert(tk.END, sender_text, "timestamp")
         
         # Add message content
-        self.chat_text.insert(tk.END, f"{message}\n\n", tag)
+        self.chat_display.insert(tk.END, f"{message}\n\n", tag)
         
-        self.chat_text.config(state=tk.DISABLED)
-        self.chat_text.see(tk.END)
+        self.chat_display.config(state=tk.DISABLED)
+        self.chat_display.see(tk.END)
 
     def _handle_response_received(self, response):
         """Handle AI response received."""
         # Remove thinking message (last message)
-        self.chat_text.config(state=tk.NORMAL)
+        self.chat_display.config(state=tk.NORMAL)
         
         # Find and remove the thinking message
-        content = self.chat_text.get("1.0", tk.END)
+        content = self.chat_display.get("1.0", tk.END)
         if "🤔 Thinking..." in content:
             lines = content.split('\n')
             filtered_lines = [line for line in lines if "🤔 Thinking..." not in line]
-            self.chat_text.delete("1.0", tk.END)
-            self.chat_text.insert("1.0", '\n'.join(filtered_lines))
+            self.chat_display.delete("1.0", tk.END)
+            self.chat_display.insert("1.0", '\n'.join(filtered_lines))
         
-        self.chat_text.config(state=tk.DISABLED)
+        self.chat_display.config(state=tk.DISABLED)
         
         # Add the actual response
         self._add_chat_message("Assistant", response, "assistant_msg")
@@ -4402,9 +4386,9 @@ Click any example or type your own question! 🎯"""
     def _clear_chat(self):
         """Enhanced chat clearing with confirmation."""
         if messagebox.askyesno("Clear Chat", "Clear all chat history?"):
-            self.chat_text.config(state=tk.NORMAL)
-            self.chat_text.delete("1.0", tk.END)
-            self.chat_text.config(state=tk.DISABLED)
+            self.chat_display.config(state=tk.NORMAL)
+            self.chat_display.delete("1.0", tk.END)
+            self.chat_display.config(state=tk.DISABLED)
             
             # Add fresh welcome message
             self._add_welcome_message()
@@ -6912,7 +6896,7 @@ Provide the same JSON format as before with updated patterns."""
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to export project: {e}")
 
-    def run(self):
+        def run(self):
         """Run the enhanced CodedSwitch application."""
         try:
             logger.info("🎤 Starting CodedSwitch Enhanced Edition...")

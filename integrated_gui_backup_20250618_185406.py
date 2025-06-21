@@ -52,14 +52,6 @@ try:
 except ImportError:
     LIBROSA_AVAILABLE = False
     # Note: logger not available yet, will log later
-# Beat Studio integration
-try:
-    from beat_studio_integration import beat_studio_integration, BEAT_STUDIO_AVAILABLE
-    print("✅ Beat Studio integration loaded successfully!")
-except ImportError as e:
-    print(f"⚠️ Beat Studio integration not available: {e}")
-    BEAT_STUDIO_AVAILABLE = False
-    beat_studio_integration = None
 
 # ============================================================================
 # CONSTANTS AND CONFIGURATION
@@ -499,11 +491,6 @@ class IntegratedTranslatorGUI:
         self._setup_chatbot_tab()
         self._setup_security_tab()
         self._setup_lyric_lab_tab()
-        # Optional: add the professional Beat Studio tab if the integration is available
-        try:
-            self._setup_beat_studio_if_available()
-        except Exception as e:
-            root_logger.warning(f"Beat Studio setup skipped: {e}")
         
         # Initialize AI interface
         self._initialize_ai_interface()
@@ -528,15 +515,6 @@ class IntegratedTranslatorGUI:
                     self.root.iconbitmap(default=icon_path)
                 except Exception as e:
                     logger.warning(f"Failed to set icon: {e}")
-
-    def _setup_beat_studio_if_available(self):
-        """Add the Beat Studio tab to the notebook if the integration is available."""
-        if beat_studio_integration and getattr(beat_studio_integration, "add_beat_studio_tab", None):
-            try:
-                beat_studio_integration.add_beat_studio_tab(self.notebook, self)
-                root_logger.info("Beat Studio tab initialized.")
-            except Exception as e:
-                root_logger.warning(f"Beat Studio initialization failed: {e}")
 
     def _initialize_ai_interface(self):
         """Initialize the AI interface with better error handling."""
@@ -578,9 +556,9 @@ class IntegratedTranslatorGUI:
             f"Failed to initialize AI interface.\n\n"
             f"Error: {error_msg}\n\n"
             "You can:\n"
-            "• Check your API key\n"
-            "• Try demo mode\n"
-            "• Restart the application"
+            "* Check your API key\n"
+            "* Try demo mode\n"
+            "* Restart the application"
         )
 
     def _configure_styles(self):
@@ -1025,10 +1003,10 @@ class IntegratedTranslatorGUI:
 4. Review the translated code and insights here
 
 🎯 Pro Tips:
-• Use Ctrl+R for reverse translation
-• Try different AI models for varying results  
-• Check the Security Scanner for code safety
-• Export results for documentation
+* Use Ctrl+R for reverse translation
+* Try different AI models for varying results  
+* Check the Security Scanner for code safety
+* Export results for documentation
 """
         self.feedback_text.insert("1.0", initial_help)
 
@@ -1113,15 +1091,13 @@ class IntegratedTranslatorGUI:
             state=tk.DISABLED
         )
         self.chat_display.pack(fill=tk.BOTH, expand=True)
-        # Direct reference to the underlying Text widget for reliable operations
-        self.chat_text = getattr(self.chat_display, "text", self.chat_display)
 
         # Configure enhanced text tags for different message types
-        self.chat_text.tag_configure("user_msg", foreground="#2196F3", font=("Segoe UI", self.font_size, "bold"))
-        self.chat_text.tag_configure("assistant_msg", foreground="#4CAF50", font=("Segoe UI", self.font_size))
-        self.chat_text.tag_configure("system_msg", foreground="#FF9800", font=("Segoe UI", self.font_size - 1, "italic"))
-        self.chat_text.tag_configure("error_msg", foreground="#F44336", font=("Segoe UI", self.font_size, "bold"))
-        self.chat_text.tag_configure("timestamp", foreground="#757575", font=("Segoe UI", self.font_size - 2))
+        self.chat_display.tag_configure("user_msg", foreground="#2196F3", font=("Segoe UI", self.font_size, "bold"))
+        self.chat_display.tag_configure("assistant_msg", foreground="#4CAF50", font=("Segoe UI", self.font_size))
+        self.chat_display.tag_configure("system_msg", foreground="#FF9800", font=("Segoe UI", self.font_size - 1, "italic"))
+        self.chat_display.tag_configure("error_msg", foreground="#F44336", font=("Segoe UI", self.font_size, "bold"))
+        self.chat_display.tag_configure("timestamp", foreground="#757575", font=("Segoe UI", self.font_size - 2))
 
         # Enhanced input area
         input_frame = ttk.LabelFrame(main_frame, text="✍️ Your Message", padding=10)
@@ -1337,7 +1313,7 @@ class IntegratedTranslatorGUI:
         row1_frame.pack(fill=tk.X, pady=(0, 10))
         
         tools_row1 = [
-            ("📊 Flow Analysis", self._analyze_lyric_flow, "info.TButton"),
+            (" Flow Analysis", self._analyze_lyric_flow, "info.TButton"),
             ("🎵 Rhyme Checker", self._check_rhyme_scheme, "primary.TButton"),
             ("📈 Statistics", self._show_lyric_stats, "secondary.TButton"),
             ("🎧 Beat Suggest", self._suggest_beat_type, "warning.TButton")
@@ -1598,8 +1574,8 @@ class IntegratedTranslatorGUI:
 4. Copy the generated key
 5. Paste it below and click Save
 
-🆓 The API is free with generous limits!
-🔒 Your key is stored securely on your computer."""
+The API is free with generous limits!
+Your key is stored securely on your computer."""
         
         ttk.Label(
             instructions_frame,
@@ -1776,9 +1752,9 @@ Demo Mode Notes:
                 "Invalid Key Format", 
                 "The API key format doesn't look correct.\n\n"
                 "Please check:\n"
-                "• The key is complete\n"
-                "• No extra spaces or characters\n"
-                "• Copy-paste directly from Google AI Studio"
+                "* The key is complete\n"
+                "* No extra spaces or characters\n"
+                "* Copy-paste directly from Google AI Studio"
             )
             return
             
@@ -1817,9 +1793,9 @@ Demo Mode Notes:
                     "Connection Failed", 
                     "The API key couldn't be validated.\n\n"
                     "Please check:\n"
-                    "• Your internet connection\n"
-                    "• The API key is correct\n"
-                    "• Google AI services are available"
+                    "* Your internet connection\n"
+                    "* The API key is correct\n"
+                    "* Google AI services are available"
                 )
                 
         except Exception as e:
@@ -1829,9 +1805,9 @@ Demo Mode Notes:
                 f"Failed to configure API key.\n\n"
                 f"Error: {str(e)}\n\n"
                 "You can try:\n"
-                "• Demo mode for testing\n"
-                "• Check your internet connection\n"
-                "• Verify the API key is correct"
+                "* Demo mode for testing\n"
+                "* Check your internet connection\n"
+                "* Verify the API key is correct"
             )
 
     # ============================================================================
@@ -1939,27 +1915,27 @@ Demo Mode Notes:
         target_lines = len(translated_code.splitlines())
         size_ratio = len(translated_code) / max(len(source_code), 1)
         
-        feedback = f"""🎉 Translation Completed Successfully!
+        feedback = f"""Translation Completed Successfully!
 
-📊 Translation Metrics:
-• Source: {source_lang} ({source_lines} lines, {len(source_code):,} characters)
-• Target: {target_lang} ({target_lines} lines, {len(translated_code):,} characters)
-• Size ratio: {size_ratio:.2f}x
-• Translation quality: AI-optimized
+Translation Metrics:
+* Source: {source_lang} ({source_lines} lines, {len(source_code):,} characters)
+* Target: {target_lang} ({target_lines} lines, {len(translated_code):,} characters)
+* Size ratio: {size_ratio:.2f}x
+* Translation quality: AI-optimized
 
 💡 Key Differences ({source_lang} → {target_lang}):
 {self._get_language_differences(source_lang, target_lang)}
 
 🔧 Next Steps:
-• Review the translated code for accuracy
-• Test the functionality in your target environment
-• Use the Security Scanner to check for vulnerabilities
-• Consider running both versions side-by-side for validation
+* Review the translated code for accuracy
+* Test the functionality in your target environment
+* Use the Security Scanner to check for vulnerabilities
+* Consider running both versions side-by-side for validation
 
 ✨ Pro Tips:
-• Different languages have different performance characteristics
-• Some language-specific features may need manual adjustment
-• Consider the target platform's best practices
+* Different languages have different performance characteristics
+* Some language-specific features may need manual adjustment
+* Consider the target platform's best practices
 """
         
         self.feedback_text.insert("1.0", feedback)
@@ -1967,15 +1943,15 @@ Demo Mode Notes:
     def _get_language_differences(self, source_lang, target_lang):
         """Get key differences between programming languages."""
         differences = {
-            ("Python", "JavaScript"): "• Indentation → Braces\n• print() → console.log()\n• Dynamic typing remains similar",
-            ("JavaScript", "Python"): "• Braces → Indentation\n• console.log() → print()\n• Variable declarations simplified",
-            ("Python", "Java"): "• Dynamic → Static typing\n• No semicolons → Semicolons required\n• Classes more verbose in Java",
-            ("Java", "Python"): "• Static → Dynamic typing\n• Semicolons → No semicolons\n• More concise syntax",
-            ("Python", "C++"): "• Interpreted → Compiled\n• Memory management automated → Manual\n• More explicit type declarations",
+            ("Python", "JavaScript"): "* Indentation → Braces\n* print() → console.log()\n* Dynamic typing remains similar",
+            ("JavaScript", "Python"): "* Braces → Indentation\n* console.log() → print()\n* Variable declarations simplified",
+            ("Python", "Java"): "* Dynamic → Static typing\n* No semicolons → Semicolons required\n* Classes more verbose in Java",
+            ("Java", "Python"): "* Static → Dynamic typing\n* Semicolons → No semicolons\n* More concise syntax",
+            ("Python", "C++"): "* Interpreted → Compiled\n* Memory management automated → Manual\n* More explicit type declarations",
         }
         
         key = (source_lang, target_lang)
-        return differences.get(key, "• Syntax and paradigm differences\n• Language-specific features adapted\n• Best practices applied")
+        return differences.get(key, "* Syntax and paradigm differences\n* Language-specific features adapted\n* Best practices applied")
 
     @ErrorHandler.handle_errors("Vulnerability Scanning")
     def scan_code_for_vulnerabilities(self):
@@ -2009,7 +1985,7 @@ Demo Mode Notes:
                 "⚡ Checking for injection vulnerabilities...",
                 "🔐 Scanning for credential leaks...",
                 "🚨 AI-powered threat detection...",
-                "📊 Generating comprehensive report..."
+                " Generating comprehensive report..."
             ]
             
             self._show_scan_progress(progress_steps)
@@ -2051,31 +2027,31 @@ Demo Mode Notes:
         lines = len(code.splitlines())
         chars = len(code)
         
-        clean_report = f"""🎉 EXCELLENT! No Security Vulnerabilities Detected! 🎉
+        clean_report = f""" EXCELLENT! No Security Vulnerabilities Detected! 
 
-📊 Scan Summary:
-• Language: {language.title()}
-• Lines scanned: {lines:,}
-• Characters analyzed: {chars:,}
-• Vulnerability patterns checked: 50+
-• AI confidence: High
+ Scan Summary:
+* Language: {language.title()}
+* Lines scanned: {lines:,}
+* Characters analyzed: {chars:,}
+* Vulnerability patterns checked: 50+
+* AI confidence: High
 
 ✅ Security Checks Passed:
-• SQL Injection patterns ✓
-• Cross-Site Scripting (XSS) ✓
-• Command Injection ✓
-• Path Traversal ✓
-• Hard-coded credentials ✓
-• Input validation issues ✓
-• Authentication bypasses ✓
-• Information disclosure ✓
+* SQL Injection patterns ✓
+* Cross-Site Scripting (XSS) ✓
+* Command Injection ✓
+* Path Traversal ✓
+* Hard-coded credentials ✓
+* Input validation issues ✓
+* Authentication bypasses ✓
+* Information disclosure ✓
 
 💡 Security Best Practices Reminder:
-• Always validate user input
-• Use parameterized queries
-• Keep dependencies updated
-• Regular security reviews
-• Follow OWASP guidelines
+* Always validate user input
+* Use parameterized queries
+* Keep dependencies updated
+* Regular security reviews
+* Follow OWASP guidelines
 
 🔧 Want to test the scanner? Click 'Load Example' for vulnerable code samples!
 """
@@ -2097,10 +2073,10 @@ Demo Mode Notes:
         # Header
         header = f"""🛡️ SECURITY VULNERABILITY REPORT 🛡️
 
-📊 Scan Results Summary:
-• Total Issues Found: {len(vulnerabilities)}
-• Code Language: {self.scan_lang.get()}
-• Lines Analyzed: {len(code.splitlines()):,}
+ Scan Results Summary:
+* Total Issues Found: {len(vulnerabilities)}
+* Code Language: {self.scan_lang.get()}
+* Lines Analyzed: {len(code.splitlines()):,}
 
 🚨 Severity Breakdown:
 """
@@ -2109,7 +2085,7 @@ Demo Mode Notes:
             count = severity_counts.get(severity, 0)
             if count > 0:
                 emoji = {'CRITICAL': '🔴', 'HIGH': '🟠', 'MEDIUM': '🟡', 'LOW': '🔵'}[severity]
-                header += f"• {emoji} {severity}: {count} issue{'s' if count > 1 else ''}\n"
+                header += f"* {emoji} {severity}: {count} issue{'s' if count > 1 else ''}\n"
         
         header += "\n" + "="*60 + "\n\n"
         
@@ -2124,26 +2100,26 @@ Demo Mode Notes:
 💡 SECURITY RECOMMENDATIONS:
 
 🔧 Immediate Actions:
-• Fix all HIGH and CRITICAL severity issues immediately
-• Review and address MEDIUM priority vulnerabilities
-• Consider LOW priority improvements for code quality
+* Fix all HIGH and CRITICAL severity issues immediately
+* Review and address MEDIUM priority vulnerabilities
+* Consider LOW priority improvements for code quality
 
 🛡️ Prevention Strategies:
-• Implement input validation and sanitization
-• Use prepared statements for database queries
-• Apply principle of least privilege
-• Regular security testing and code reviews
-• Keep all dependencies updated
+* Implement input validation and sanitization
+* Use prepared statements for database queries
+* Apply principle of least privilege
+* Regular security testing and code reviews
+* Keep all dependencies updated
 
 📚 Additional Resources:
-• OWASP Top 10: https://owasp.org/www-project-top-ten/
-• Secure coding guidelines for {self.scan_lang.get()}
-• Consider using automated security testing tools
+* OWASP Top 10: https://owasp.org/www-project-top-ten/
+* Secure coding guidelines for {self.scan_lang.get()}
+* Consider using automated security testing tools
 
 🔄 Next Steps:
-• Use the 'Auto-Fix Issues' button for automated repairs
-• Export this report for your security team
-• Re-scan after implementing fixes
+* Use the 'Auto-Fix Issues' button for automated repairs
+* Export this report for your security team
+* Re-scan after implementing fixes
 """
         
         self._add_scan_result(recommendations, "info")
@@ -2326,26 +2302,26 @@ Make it detailed and actionable."""
         
         return f"""🎵 FLOW ANALYSIS RESULTS:
 
-📊 Structure Analysis:
-• Total lines: {line_count}
-• Average words per line: {len(lyrics.split()) / max(line_count, 1):.1f}
-• Estimated syllables: {len(lyrics.split()) * 1.3:.0f}
+ Structure Analysis:
+* Total lines: {line_count}
+* Average words per line: {len(lyrics.split()) / max(line_count, 1):.1f}
+* Estimated syllables: {len(lyrics.split()) * 1.3:.0f}
 
 🎼 Flow Assessment:
-• Flow consistency: 8/10
-• Rhyme scheme: Mixed patterns detected
-• Internal rhymes: Present
-• Rhythm: Steady with good variation
+* Flow consistency: 8/10
+* Rhyme scheme: Mixed patterns detected
+* Internal rhymes: Present
+* Rhythm: Steady with good variation
 
 💡 Strengths:
-• Good word choice and vocabulary
-• Consistent theme development
-• Natural flow progression
+* Good word choice and vocabulary
+* Consistent theme development
+* Natural flow progression
 
 🔧 Suggestions:
-• Add more internal rhymes in lines 3-5
-• Consider varying syllable counts for dynamics
-• Strengthen end rhymes in verse 2
+* Add more internal rhymes in lines 3-5
+* Consider varying syllable counts for dynamics
+* Strengthen end rhymes in verse 2
 
 ⭐ Overall Rating: 8.5/10 - Strong lyrical content with good flow!"""
 
@@ -2388,24 +2364,24 @@ Format clearly with examples."""
         return f"""🎵 RHYME SCHEME ANALYSIS:
 
 📋 Pattern Detection:
-• Primary scheme: ABAB pattern
-• Secondary patterns: Internal AABB sequences
-• Rhyme density: High (strong end rhymes)
+* Primary scheme: ABAB pattern
+* Secondary patterns: Internal AABB sequences
+* Rhyme density: High (strong end rhymes)
 
 🎯 End Rhyme Mapping:
-• Lines 1,3: Strong perfect rhymes
-• Lines 2,4: Consistent pattern
-• Multi-syllable rhymes detected
+* Lines 1,3: Strong perfect rhymes
+* Lines 2,4: Consistent pattern
+* Multi-syllable rhymes detected
 
 💎 Internal Rhymes:
-• Present in 60% of lines
-• Good use of alliteration
-• Assonance patterns identified
+* Present in 60% of lines
+* Good use of alliteration
+* Assonance patterns identified
 
 🔧 Improvement Suggestions:
-• Experiment with AAAA scheme for intensity
-• Add more slant rhymes for variety
-• Consider cross-rhymes between verses
+* Experiment with AAAA scheme for intensity
+* Add more slant rhymes for variety
+* Consider cross-rhymes between verses
 
 ⭐ Rhyme Quality: 8/10 - Excellent rhyming structure!"""
 
@@ -3004,7 +2980,7 @@ Be specific and match the lyrical content perfectly."""
         messagebox.showerror(
             "Beat Generation Error",
             f"Failed to generate or play beat.\n\n{error_msg}\n\n"
-            "Try:\n• Adjusting the BPM\n• Simplifying the pattern\n• Restarting audio"
+            "Try:\n* Adjusting the BPM\n* Simplifying the pattern\n* Restarting audio"
         )
 
     # ============================================================================
@@ -3173,9 +3149,9 @@ Make it more clever, impactful, and stylistically consistent. Return only the re
                 "✅ Professional mixing\n"
                 "✅ Multiple format options\n\n"
                 "Coming in the next update! For now, you can:\n"
-                "• Export lyrics as text\n"
-                "• Generate and save beats separately\n"
-                "• Use external DAW for combining"
+                "* Export lyrics as text\n"
+                "* Generate and save beats separately\n"
+                "* Use external DAW for combining"
             )
             
         except Exception as e:
@@ -3194,17 +3170,17 @@ Make it more clever, impactful, and stylistically consistent. Return only the re
 Ready to share: {len(lyrics.split())} words, {len(lyrics.splitlines())} lines
 
 🎯 Sharing Options:
-• Story Protocol (IP Protection)
-• SoundCloud (Audio Platform) 
-• Genius (Lyrics Database)
-• Social Media (Twitter, Instagram)
-• Personal Blog/Website
+* Story Protocol (IP Protection)
+* SoundCloud (Audio Platform) 
+* Genius (Lyrics Database)
+* Social Media (Twitter, Instagram)
+* Personal Blog/Website
 
 💡 Tips:
-• Add copyright notice
-• Consider IP protection first
-• Tag appropriately for discovery
-• Engage with community feedback
+* Add copyright notice
+* Consider IP protection first
+* Tag appropriately for discovery
+* Engage with community feedback
 
 Would you like to export for sharing?"""
         
@@ -3324,10 +3300,10 @@ Would you like to export for sharing?"""
             "API Quota Exceeded",
             "You've reached your daily API limit.\n\n"
             "Solutions:\n"
-            "• Wait until tomorrow for reset\n"
-            "• Upgrade your API plan\n"
-            "• Try smaller code snippets\n"
-            "• Use demo mode for testing"
+            "* Wait until tomorrow for reset\n"
+            "* Upgrade your API plan\n"
+            "* Try smaller code snippets\n"
+            "* Use demo mode for testing"
         )
 
     def _show_network_error(self):
@@ -3336,9 +3312,9 @@ Would you like to export for sharing?"""
             "Network Connection Error",
             "Couldn't connect to AI services.\n\n"
             "Please check:\n"
-            "• Your internet connection\n"
-            "• Firewall settings\n"
-            "• Try again in a moment"
+            "* Your internet connection\n"
+            "* Firewall settings\n"
+            "* Try again in a moment"
         )
 
     def _show_generic_translation_error(self, error):
@@ -3347,9 +3323,9 @@ Would you like to export for sharing?"""
             "Translation Error",
             f"Translation failed with error:\n\n{error}\n\n"
             "Try:\n"
-            "• Simplifying your code\n"
-            "• Checking for syntax errors\n"
-            "• Using a different AI model"
+            "* Simplifying your code\n"
+            "* Checking for syntax errors\n"
+            "* Using a different AI model"
         )
 
     # Continue with remaining utility methods...
@@ -3766,30 +3742,30 @@ if __name__ == '__main__':
    🎤 Lyric Lab - Create rap lyrics with AI tools
 
 💡 PRO TIPS:
-   • Use different AI models for varying results
-   • Try reverse translation to learn syntax differences
-   • Security scan before deploying code
-   • Export results as HTML for documentation
-   • Lyric Lab has {len(LYRIC_STYLES)} different styles
+   * Use different AI models for varying results
+   * Try reverse translation to learn syntax differences
+   * Security scan before deploying code
+   * Export results as HTML for documentation
+   * Lyric Lab has {len(LYRIC_STYLES)} different styles
 
 🔗 ADDITIONAL HELP:
-   • Documentation: Press F1 in any tab
-   • Community: Join our Discord server
-   • Issues: Report bugs on GitHub
-   • Updates: Check Help → About for version info
+   * Documentation: Press F1 in any tab
+   * Community: Join our Discord server
+   * Issues: Report bugs on GitHub
+   * Updates: Check Help → About for version info
 
 🎵 LYRIC LAB SPECIAL FEATURES:
-   • AI beat generation with actual audio
-   • Real-time rhyme suggestions
-   • Flow analysis and improvement tips
-   • Multiple rap styles and moods
-   • Story Protocol integration for IP protection
+   * AI beat generation with actual audio
+   * Real-time rhyme suggestions
+   * Flow analysis and improvement tips
+   * Multiple rap styles and moods
+   * Story Protocol integration for IP protection
 
-📊 CURRENT SESSION:
-   • Theme: {self.current_theme}
-   • Model: {self.gemini_model}
-   • Audio: {"Enabled" if self.resource_manager.audio_initialized else "Disabled"}
-   • API: {"Connected" if self.gemini_api_key else "Demo Mode"}
+ CURRENT SESSION:
+   * Theme: {self.current_theme}
+   * Model: {self.gemini_model}
+   * Audio: {"Enabled" if self.resource_manager.audio_initialized else "Disabled"}
+   * API: {"Connected" if self.gemini_api_key else "Demo Mode"}
 """
         
         # Show in dialog
@@ -3825,10 +3801,10 @@ if __name__ == '__main__':
             "📚 User Guide",
             "Opening CodedSwitch User Guide in browser...\n\n"
             "The guide covers:\n"
-            "• Getting started with AI translation\n"
-            "• Security scanning best practices\n" 
-            "• Lyric Lab creative techniques\n"
-            "• Advanced features and tips"
+            "* Getting started with AI translation\n"
+            "* Security scanning best practices\n" 
+            "* Lyric Lab creative techniques\n"
+            "* Advanced features and tips"
         )
         webbrowser.open("https://github.com/your-repo/codedswitch/wiki")
 
@@ -3839,11 +3815,11 @@ if __name__ == '__main__':
             "CodedSwitch v2.1 Enhanced Edition\n\n"
             "✅ You're running the latest enhanced version!\n\n"
             "New in this version:\n"
-            "• Improved error handling\n"
-            "• Enhanced beat generation\n"
-            "• Better resource management\n"
-            "• Advanced lyric analysis tools\n"
-            "• Professional UI polish"
+            "* Improved error handling\n"
+            "* Enhanced beat generation\n"
+            "* Better resource management\n"
+            "* Advanced lyric analysis tools\n"
+            "* Professional UI polish"
         )
 
     def _show_find_replace(self):
@@ -3852,10 +3828,10 @@ if __name__ == '__main__':
             "🔍 Find & Replace",
             "Find & Replace functionality coming soon!\n\n"
             "Will include:\n"
-            "• Text search across all editors\n"
-            "• Regex pattern matching\n"
-            "• Replace in selection or all\n"
-            "• Case sensitive options"
+            "* Text search across all editors\n"
+            "* Regex pattern matching\n"
+            "* Replace in selection or all\n"
+            "* Case sensitive options"
         )
 
     def _show_preferences(self):
@@ -4109,11 +4085,11 @@ main();''',
             welcome_msg = """🤖 Welcome to CodedSwitch AI Assistant!
 
 I'm Astutely, your AI coding assistant. I can help you with:
-• Code translation between programming languages
-• Debugging and code optimization
-• Answering programming questions
-• Explaining code concepts
-• And much more!
+* Code translation between programming languages
+* Debugging and code optimization
+* Answering programming questions
+* Explaining code concepts
+* And much more!
 
 Type your message below or try one of the example prompts.
 """
@@ -4225,24 +4201,24 @@ Type your message below or try one of the example prompts.
 🎯 I'm here to help you with:
 
 🔄 **Code Translation**
-• Convert code between programming languages
-• Explain language-specific concepts
-• Optimize and refactor code
+* Convert code between programming languages
+* Explain language-specific concepts
+* Optimize and refactor code
 
 🛡️ **Code Security**
-• Identify vulnerabilities in your code
-• Suggest security improvements
-• Follow best practices
+* Identify vulnerabilities in your code
+* Suggest security improvements
+* Follow best practices
 
 🎤 **Creative Coding & Lyrics**
-• Help with coding projects and algorithms
-• Assist with rap lyrics and creative writing
-• Combine technical and creative skills
+* Help with coding projects and algorithms
+* Assist with rap lyrics and creative writing
+* Combine technical and creative skills
 
 💡 **How to get the best help:**
-• Be specific about your coding language and goals
-• Share code snippets for detailed analysis
-• Ask follow-up questions for clarification
+* Be specific about your coding language and goals
+* Share code snippets for detailed analysis
+* Ask follow-up questions for clarification
 
 What would you like to work on today? 🚀"""
         
@@ -4266,15 +4242,15 @@ What would you like to work on today? 🚀"""
                 if first_visible < 1.0:  # If not at the end
                     self.chat_display.yview_moveto(first_visible)
                 else:
-                    self.chat_text.see(tk.END)
+                    self.chat_display.see(tk.END)
                 
                 # Disable editing
-                text_widget.configure(state='disabled')
+                self.chat_display.configure(state='disabled')
         except Exception as e:
             logger.error(f"Error in _add_welcome_message: {str(e)}")
             # Try to recover by just disabling the widget
             try:
-                text_widget.configure(state='disabled')
+                self.chat_display.configure(state='disabled')
             except:
                 pass
 
@@ -4284,24 +4260,24 @@ What would you like to work on today? 🚀"""
 
 {{ ... }}
 🔄 **Translation Help:**
-• "Explain this Python code and translate it to JavaScript"
-• "What are the key differences between Python and Java?"
-• "How would this algorithm work in C++?"
+* "Explain this Python code and translate it to JavaScript"
+* "What are the key differences between Python and Java?"
+* "How would this algorithm work in C++?"
 
 🛡️ **Security & Code Quality:**
-• "Review this code for security vulnerabilities"
-• "How can I make this function more efficient?"
-• "What are the best practices for this type of code?"
+* "Review this code for security vulnerabilities"
+* "How can I make this function more efficient?"
+* "What are the best practices for this type of code?"
 
 🎤 **Creative & Learning:**
-• "Help me write rap lyrics about programming"
-• "Explain recursion using a creative analogy"
-• "What's a fun coding project for learning JavaScript?"
+* "Help me write rap lyrics about programming"
+* "Explain recursion using a creative analogy"
+* "What's a fun coding project for learning JavaScript?"
 
 🚀 **Advanced Assistance:**
-• "Design a database schema for an e-commerce app"
-• "Help me debug this complex algorithm"
-• "Suggest modern alternatives to this legacy code"
+* "Design a database schema for an e-commerce app"
+* "Help me debug this complex algorithm"
+* "Suggest modern alternatives to this legacy code"
 
 Click any example or type your own question! 🎯"""
         
@@ -4366,32 +4342,32 @@ Click any example or type your own question! 🎯"""
         """Add message to chat with timestamp."""
         timestamp = datetime.now().strftime("%H:%M")
         
-        self.chat_text.config(state=tk.NORMAL)
+        self.chat_display.config(state=tk.NORMAL)
         
         # Add sender and timestamp
         sender_text = f"[{timestamp}] {sender}: "
-        self.chat_text.insert(tk.END, sender_text, "timestamp")
+        self.chat_display.insert(tk.END, sender_text, "timestamp")
         
         # Add message content
-        self.chat_text.insert(tk.END, f"{message}\n\n", tag)
+        self.chat_display.insert(tk.END, f"{message}\n\n", tag)
         
-        self.chat_text.config(state=tk.DISABLED)
-        self.chat_text.see(tk.END)
+        self.chat_display.config(state=tk.DISABLED)
+        self.chat_display.see(tk.END)
 
     def _handle_response_received(self, response):
         """Handle AI response received."""
         # Remove thinking message (last message)
-        self.chat_text.config(state=tk.NORMAL)
+        self.chat_display.config(state=tk.NORMAL)
         
         # Find and remove the thinking message
-        content = self.chat_text.get("1.0", tk.END)
+        content = self.chat_display.get("1.0", tk.END)
         if "🤔 Thinking..." in content:
             lines = content.split('\n')
             filtered_lines = [line for line in lines if "🤔 Thinking..." not in line]
-            self.chat_text.delete("1.0", tk.END)
-            self.chat_text.insert("1.0", '\n'.join(filtered_lines))
+            self.chat_display.delete("1.0", tk.END)
+            self.chat_display.insert("1.0", '\n'.join(filtered_lines))
         
-        self.chat_text.config(state=tk.DISABLED)
+        self.chat_display.config(state=tk.DISABLED)
         
         # Add the actual response
         self._add_chat_message("Assistant", response, "assistant_msg")
@@ -4402,9 +4378,9 @@ Click any example or type your own question! 🎯"""
     def _clear_chat(self):
         """Enhanced chat clearing with confirmation."""
         if messagebox.askyesno("Clear Chat", "Clear all chat history?"):
-            self.chat_text.config(state=tk.NORMAL)
-            self.chat_text.delete("1.0", tk.END)
-            self.chat_text.config(state=tk.DISABLED)
+            self.chat_display.config(state=tk.NORMAL)
+            self.chat_display.delete("1.0", tk.END)
+            self.chat_display.config(state=tk.DISABLED)
             
             # Add fresh welcome message
             self._add_welcome_message()
@@ -4473,9 +4449,9 @@ Click any example or type your own question! 🎯"""
                     "Model Changed",
                     f"AI model changed from {old_model} to {new_model}\n\n"
                     "Different models may have varying:\n"
-                    "• Response styles and capabilities\n"
-                    "• Processing speed and accuracy\n"
-                    "• Specialized knowledge areas\n\n"
+                    "* Response styles and capabilities\n"
+                    "* Processing speed and accuracy\n"
+                    "* Specialized knowledge areas\n\n"
                     "Try the new model with your next request!"
                 )
                 
@@ -4499,31 +4475,31 @@ Enhanced Edition v2.1
 🎤 Lyric Lab Studio - Create rap lyrics with AI assistance and beat generation
 
 🎵 LYRIC LAB SPECIAL FEATURES:
-• {len(LYRIC_STYLES)} different rap styles (Boom Bap, Trap, Drill, etc.)
-• Real-time rhyme and synonym suggestions
-• AI-powered flow analysis and improvement tips
-• Beat generation with actual audio playback
-• Story Protocol integration for IP protection
-• Professional vocal guides and delivery tips
+* {len(LYRIC_STYLES)} different rap styles (Boom Bap, Trap, Drill, etc.)
+* Real-time rhyme and synonym suggestions
+* AI-powered flow analysis and improvement tips
+* Beat generation with actual audio playback
+* Story Protocol integration for IP protection
+* Professional vocal guides and delivery tips
 
 🔧 TECHNICAL FEATURES:
-• Multi-model AI support (Gemini 2.0, 2.5)
-• Advanced error handling and resource management
-• Professional UI with {len(THEMES)} themes
-• Comprehensive keyboard shortcuts
-• Export capabilities (HTML, PDF, Audio projects)
-• Real-time code validation and syntax checking
+* Multi-model AI support (Gemini 2.0, 2.5)
+* Advanced error handling and resource management
+* Professional UI with {len(THEMES)} themes
+* Comprehensive keyboard shortcuts
+* Export capabilities (HTML, PDF, Audio projects)
+* Real-time code validation and syntax checking
 
 💎 THE TRIPLE ENTENDRE:
-• CODE (Programming languages)
-• CODE (Lyrics/Bars in rap)
-• CODE-SWITCHING (Seamless transitions between modes)
+* CODE (Programming languages)
+* CODE (Lyrics/Bars in rap)
+* CODE-SWITCHING (Seamless transitions between modes)
 
 🌟 CURRENT SESSION:
-• Theme: {self.current_theme}
-• AI Model: {self.gemini_model}
-• Audio System: {"🎵 Active" if self.resource_manager.audio_initialized else "🔇 Inactive"}
-• API Status: {"🟢 Connected" if self.gemini_api_key else "🟡 Demo Mode"}
+* Theme: {self.current_theme}
+* AI Model: {self.gemini_model}
+* Audio System: {"🎵 Active" if self.resource_manager.audio_initialized else "🔇 Inactive"}
+* API Status: {"🟢 Connected" if self.gemini_api_key else "🟡 Demo Mode"}
 
 🎯 Perfect for developers, artists, students, and creative technologists!
 
@@ -4624,40 +4600,40 @@ Show before/after examples where possible. Be specific and constructive."""
         
         return f"""✏️ LYRIC ENHANCEMENT SUGGESTIONS:
 
-📊 Current Analysis:
-• Lines: {line_count} | Words: {word_count}
-• Style: {self.lyric_style.get()}
-• Estimated performance time: {word_count * 0.4:.1f} seconds
+ Current Analysis:
+* Lines: {line_count} | Words: {word_count}
+* Style: {self.lyric_style.get()}
+* Estimated performance time: {word_count * 0.4:.1f} seconds
 
 🎯 FLOW IMPROVEMENTS:
-• Line 3: Try breaking the long phrase for better breath control
-• Consider adding more syncopated rhythms in verse 2
-• Strengthen the emphasis on technical terms for impact
+* Line 3: Try breaking the long phrase for better breath control
+* Consider adding more syncopated rhythms in verse 2
+* Strengthen the emphasis on technical terms for impact
 
 🎵 RHYME SCHEME UPGRADES:
-• Current pattern shows potential - try AABB in the hook
-• Add internal rhymes in lines 5-7 for complexity
-• Consider slant rhymes for more sophisticated sound
+* Current pattern shows potential - try AABB in the hook
+* Add internal rhymes in lines 5-7 for complexity
+* Consider slant rhymes for more sophisticated sound
 
 💎 WORDPLAY ENHANCEMENTS:
-• Replace simple words with programming metaphors
-• Add double entendres related to coding themes
-• Incorporate more technical terminology creatively
+* Replace simple words with programming metaphors
+* Add double entendres related to coding themes
+* Incorporate more technical terminology creatively
 
 📐 SYLLABLE OPTIMIZATION:
-• Current average: {word_count/max(line_count, 1):.1f} syllables per line
-• Recommended range: 10-16 syllables for this style
-• Balance longer and shorter lines for dynamics
+* Current average: {word_count/max(line_count, 1):.1f} syllables per line
+* Recommended range: 10-16 syllables for this style
+* Balance longer and shorter lines for dynamics
 
 🏗️ STRUCTURAL IMPROVEMENTS:
-• Strong opening - consider making it the hook
-• Develop the coding theme more consistently
-• Add a bridge section for variety
+* Strong opening - consider making it the hook
+* Develop the coding theme more consistently
+* Add a bridge section for variety
 
 🎤 DELIVERY GUIDANCE:
-• Emphasize technical terms with vocal inflection
-• Use pause for dramatic effect after punchlines
-• Consider vocal layering on the hook
+* Emphasize technical terms with vocal inflection
+* Use pause for dramatic effect after punchlines
+* Consider vocal layering on the hook
 
 ⭐ Overall Potential: 8.5/10 - Great foundation, excellent improvement opportunities!"""
 
@@ -4709,61 +4685,61 @@ Make it practical for actual recording sessions with specific line-by-line guida
 🎯 STYLE: {style} | MOOD: {mood}
 
 🗣️ VOCAL TONE & CHARACTER:
-• Overall approach: Confident, technically precise delivery
-• Attitude: Cool, controlled, slightly aggressive undertone
-• Character: Tech-savvy lyricist with serious skills
+* Overall approach: Confident, technically precise delivery
+* Attitude: Cool, controlled, slightly aggressive undertone
+* Character: Tech-savvy lyricist with serious skills
 
 ⏱️ DELIVERY PACE:
-• Verses: Medium tempo with occasional rapid-fire sections
-• Hook: Slightly slower for memorability and impact
-• Bridge: Vary pace for dynamics and listener engagement
+* Verses: Medium tempo with occasional rapid-fire sections
+* Hook: Slightly slower for memorability and impact
+* Bridge: Vary pace for dynamics and listener engagement
 
 💥 EMPHASIS PATTERNS:
-• STRONG emphasis on technical terms (variables, functions, etc.)
-• Punch hard on rhyme words and end-of-line impacts
-• Subtle emphasis on internal rhymes for flow complexity
+* STRONG emphasis on technical terms (variables, functions, etc.)
+* Punch hard on rhyme words and end-of-line impacts
+* Subtle emphasis on internal rhymes for flow complexity
 
 🫁 BREATH CONTROL:
-• Strategic pause after every 4-bar section
-• Quick breath during natural pauses in lyrics
-• Use breath as rhythmic element, not interruption
+* Strategic pause after every 4-bar section
+* Quick breath during natural pauses in lyrics
+* Use breath as rhythmic element, not interruption
 
 🎵 VOCAL EFFECTS:
-• Subtle ad-libs on technical terms ("yeah", "uh-huh")
-• Voice doubling on hook for thickness
-• Light vocal runs on sustained notes
+* Subtle ad-libs on technical terms ("yeah", "uh-huh")
+* Voice doubling on hook for thickness
+* Light vocal runs on sustained notes
 
-📊 DYNAMICS:
-• Start moderate, build energy through verses
-• Peak energy on hook sections
-• Dynamic drops for emphasis and contrast
+ DYNAMICS:
+* Start moderate, build energy through verses
+* Peak energy on hook sections
+* Dynamic drops for emphasis and contrast
 
 🗣️ ARTICULATION:
-• Crystal clear on technical terminology
-• Slight slur acceptable on transitional words
-• Crisp consonants for punchline delivery
+* Crystal clear on technical terminology
+* Slight slur acceptable on transitional words
+* Crisp consonants for punchline delivery
 
 💫 EMOTIONAL DELIVERY:
-• Controlled confidence throughout
-• Slight swagger on clever wordplay
-• Intensity without losing technical precision
+* Controlled confidence throughout
+* Slight swagger on clever wordplay
+* Intensity without losing technical precision
 
 ⏰ TIMING & SYNCOPATION:
-• Stay slightly ahead of beat for urgency
-• Use syncopation on internal rhymes
-• Lock onto kick pattern for foundation
+* Stay slightly ahead of beat for urgency
+* Use syncopation on internal rhymes
+* Lock onto kick pattern for foundation
 
 🎙️ RECORDING TECHNIQUES:
-• Close-mic for intimacy, but watch plosives
-• Light compression for consistency
-• Double-track hook sections for impact
-• EQ boost around 3-5kHz for clarity
+* Close-mic for intimacy, but watch plosives
+* Light compression for consistency
+* Double-track hook sections for impact
+* EQ boost around 3-5kHz for clarity
 
 📝 LINE-BY-LINE NOTES:
-• Opening line: Set the tone - confident but not rushed
-• Technical terms: Enunciate clearly, these are your expertise
-• Rhyme words: Hit these hard for satisfying payoffs
-• Hook: Make it memorable - this is what people will sing along to
+* Opening line: Set the tone - confident but not rushed
+* Technical terms: Enunciate clearly, these are your expertise
+* Rhyme words: Hit these hard for satisfying payoffs
+* Hook: Make it memorable - this is what people will sing along to
 
 ⭐ PERFORMANCE RATING TARGET: Studio-quality delivery with street credibility!"""
 
@@ -4806,48 +4782,48 @@ Make it practical for actual recording sessions with specific line-by-line guida
         unique_end_sounds = len(set(end_words))
         rhyme_density = (len(end_words) - unique_end_sounds) / max(len(end_words), 1) * 100
         
-        stats = f"""📊 COMPREHENSIVE LYRIC STATISTICS
+        stats = f""" COMPREHENSIVE LYRIC STATISTICS
 
 📝 BASIC METRICS:
-• Lines: {len(lines)}
-• Words: {len(words):,}
-• Characters: {chars:,}
-• Syllables: {syllables:,} (estimated)
+* Lines: {len(lines)}
+* Words: {len(words):,}
+* Characters: {chars:,}
+* Syllables: {syllables:,} (estimated)
 
 📐 AVERAGES:
-• Words per line: {avg_words_per_line:.1f}
-• Syllables per line: {avg_syllables_per_line:.1f}
-• Characters per word: {avg_chars_per_word:.1f}
+* Words per line: {avg_words_per_line:.1f}
+* Syllables per line: {avg_syllables_per_line:.1f}
+* Characters per word: {avg_chars_per_word:.1f}
 
 ⏱️ PERFORMANCE ESTIMATES:
-• 🏃 Fast delivery (6 syl/sec): {fast_time:.1f} seconds
-• 🚶 Medium pace (4 syl/sec): {medium_time:.1f} seconds
-• 🐌 Slow flow (3 syl/sec): {slow_time:.1f} seconds
+* 🏃 Fast delivery (6 syl/sec): {fast_time:.1f} seconds
+* 🚶 Medium pace (4 syl/sec): {medium_time:.1f} seconds
+* 🐌 Slow flow (3 syl/sec): {slow_time:.1f} seconds
 
 🎵 FLOW ANALYSIS:
-• Rhyme density: {rhyme_density:.1f}%
-• Style consistency: {self.lyric_style.get()}
-• Estimated complexity: {min(10, int(avg_syllables_per_line * rhyme_density / 10))}/10
+* Rhyme density: {rhyme_density:.1f}%
+* Style consistency: {self.lyric_style.get()}
+* Estimated complexity: {min(10, int(avg_syllables_per_line * rhyme_density / 10))}/10
 
 🎯 RECOMMENDATIONS:
-• Ideal line length: 12-16 syllables for {self.lyric_style.get()}
-• Current structure: {"Excellent" if 12 <= avg_syllables_per_line <= 16 else "Consider adjusting"}
-• Rhyme scheme: {"Strong" if rhyme_density > 30 else "Could be enhanced"}
+* Ideal line length: 12-16 syllables for {self.lyric_style.get()}
+* Current structure: {"Excellent" if 12 <= avg_syllables_per_line <= 16 else "Consider adjusting"}
+* Rhyme scheme: {"Strong" if rhyme_density > 30 else "Could be enhanced"}
 
 🎤 RECORDING READINESS:
-• Word count suitable for: {"Full track" if len(words) > 100 else "Verse/Hook"}
-• Performance length: {"Radio-friendly" if 60 <= medium_time <= 180 else "Extended/Short format"}
-• Complexity level: {"Professional" if syllables > 200 else "Developing"}
+* Word count suitable for: {"Full track" if len(words) > 100 else "Verse/Hook"}
+* Performance length: {"Radio-friendly" if 60 <= medium_time <= 180 else "Extended/Short format"}
+* Complexity level: {"Professional" if syllables > 200 else "Developing"}
 
 💡 NEXT STEPS:
-{"• Perfect! Ready for recording and production" if len(words) > 100 and 12 <= avg_syllables_per_line <= 16 else "• Consider expanding or refining for full track"}
-• Run flow analysis for rhythm optimization
-• Generate beat to match your lyrical style
-• Use vocal guide for recording preparation"""
+{"* Perfect! Ready for recording and production" if len(words) > 100 and 12 <= avg_syllables_per_line <= 16 else "* Consider expanding or refining for full track"}
+* Run flow analysis for rhythm optimization
+* Generate beat to match your lyrical style
+* Use vocal guide for recording preparation"""
         
         # Show in detailed dialog
         stats_dialog = tk.Toplevel(self.root)
-        stats_dialog.title("📊 Lyric Statistics & Analysis")
+        stats_dialog.title(" Lyric Statistics & Analysis")
         stats_dialog.geometry("600x500")
         stats_dialog.transient(self.root)
         
@@ -4964,11 +4940,11 @@ Make it practical for actual recording sessions with specific line-by-line guida
 
 Ready to protect your creative work on blockchain!
 
-📊 YOUR LYRICS:
-• Words: {word_count:,}
-• Lines: {line_count}
-• Style: {style}
-• Estimated value: Original creative work
+ YOUR LYRICS:
+* Words: {word_count:,}
+* Lines: {line_count}
+* Style: {style}
+* Estimated value: Original creative work
 
 🔗 REGISTRATION PROCESS:
 1. Visit: portal.story.foundation
@@ -4979,21 +4955,21 @@ Ready to protect your creative work on blockchain!
 6. Receive blockchain certificate of ownership
 
 💰 ESTIMATED COSTS:
-• Registration: $1-5 USD worth of $IP tokens
-• Gas fees: Variable (Ethereum network)
-• Optional: Enhanced protection features
+* Registration: $1-5 USD worth of $IP tokens
+* Gas fees: Variable (Ethereum network)
+* Optional: Enhanced protection features
 
 🎯 BENEFITS:
-• Immutable proof of creation
-• Automatic licensing and royalties
-• Legal protection for your IP
-• Global recognition and enforcement
-• Revenue from commercial use
+* Immutable proof of creation
+* Automatic licensing and royalties
+* Legal protection for your IP
+* Global recognition and enforcement
+* Revenue from commercial use
 
 📄 EXPORT OPTIONS:
-• JSON metadata format (recommended)
-• Text with copyright notice
-• Complete project file with all details
+* JSON metadata format (recommended)
+* Text with copyright notice
+* Complete project file with all details
 
 Would you like to export your lyrics for Story Protocol registration?"""
         
@@ -5104,27 +5080,27 @@ Would you like to export your lyrics for Story Protocol registration?"""
             ai_prompt = f"""You are a highly skilled {selected_style} rapper and lyricist. Create original lyrics based on this theme: "{prompt}"
 
 STYLE REQUIREMENTS:
-• Style: {selected_style}
-• Mood: {mood} 
-• Complexity Level: {complexity}/10
-• Description: {style_info['description']}
-• Characteristics: {style_info['characteristics']}
-• Style Guidelines: {style_info['prompt_additions']}
+* Style: {selected_style}
+* Mood: {mood} 
+* Complexity Level: {complexity}/10
+* Description: {style_info['description']}
+* Characteristics: {style_info['characteristics']}
+* Style Guidelines: {style_info['prompt_additions']}
 
 TECHNICAL REQUIREMENTS:
-• Generate 8-16 bars that perfectly exemplify {selected_style}
-• Match the {mood} mood throughout
-• Complexity level {complexity}: {"Simple and catchy" if complexity <= 3 else "Moderate complexity" if complexity <= 7 else "Highly complex and intricate"}
-• Include internal rhymes and wordplay appropriate for the style
-• For Coding Rap style: Naturally incorporate programming/tech references
-• Maintain authentic {selected_style} vocabulary and flow patterns
+* Generate 8-16 bars that perfectly exemplify {selected_style}
+* Match the {mood} mood throughout
+* Complexity level {complexity}: {"Simple and catchy" if complexity <= 3 else "Moderate complexity" if complexity <= 7 else "Highly complex and intricate"}
+* Include internal rhymes and wordplay appropriate for the style
+* For Coding Rap style: Naturally incorporate programming/tech references
+* Maintain authentic {selected_style} vocabulary and flow patterns
 
 QUALITY STANDARDS:
-• Original, creative content only
-• Strong rhyme scheme consistency
-• Appropriate syllable density for the style
-• Memorable and impactful punchlines
-• Professional-level lyrical content{context_note}
+* Original, creative content only
+* Strong rhyme scheme consistency
+* Appropriate syllable density for the style
+* Memorable and impactful punchlines
+* Professional-level lyrical content{context_note}
 
 Generate lyrics that sound like they could be performed by a top-tier {selected_style} artist."""
             
@@ -5292,1626 +5268,6 @@ Provide the same JSON format as before with updated patterns."""
                 messagebox.showerror("Export Error", f"Failed to export beat: {str(e)}")
 
     # Complete the application
-
-    def _open_beat_studio(self):
-        """Open the professional Beat Studio interface."""
-        if not hasattr(self, 'beat_studio_window') or not self.beat_studio_window.winfo_exists():
-            self._create_beat_studio_window()
-        else:
-            self.beat_studio_window.lift()
-            self.beat_studio_window.focus()
-    
-    def _create_beat_studio_window(self):
-        """Create the professional Beat Studio window."""
-        self.beat_studio_window = tk.Toplevel(self.root)
-        self.beat_studio_window.title("🎵 Professional Beat Studio")
-        self.beat_studio_window.geometry("1000x700")
-        self.beat_studio_window.configure(bg='#1a1a1a')
-        
-        # Make it modal
-        self.beat_studio_window.transient(self.root)
-        self.beat_studio_window.grab_set()
-        
-        # Main container with modern styling
-        main_frame = ttk.Frame(self.beat_studio_window)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # Header
-        header_frame = ttk.Frame(main_frame)
-        header_frame.pack(fill=tk.X, pady=(0, 10))
-        
-        ttk.Label(header_frame, text="🎵 Professional Beat Studio", 
-                 font=('Arial', 16, 'bold')).pack(side=tk.LEFT)
-        
-        # Status label
-        self.beat_status_label = ttk.Label(header_frame, text="Ready", 
-                                          foreground='green')
-        self.beat_status_label.pack(side=tk.RIGHT)
-        
-        # Create notebook for different sections
-        studio_notebook = ttk.Notebook(main_frame)
-        studio_notebook.pack(fill=tk.BOTH, expand=True)
-        
-        # Lyrics Input Tab
-        lyrics_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(lyrics_frame, text="📝 Lyrics Input")
-        self._setup_lyrics_input_tab(lyrics_frame)
-        
-        # Beat Generation Tab
-        generation_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(generation_frame, text="🎛️ Beat Generation")
-        self._setup_beat_generation_tab(generation_frame)
-        
-        # Effects & Mixing Tab
-        effects_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(effects_frame, text="🎚️ Effects & Mixing")
-        self._setup_effects_tab(effects_frame)
-        
-        # Export Tab
-        export_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(export_frame, text="💾 Export")
-        self._setup_export_tab(export_frame)
-        
-        # Control buttons at bottom
-        control_frame = ttk.Frame(main_frame)
-        control_frame.pack(fill=tk.X, pady=(10, 0))
-        
-        ttk.Button(control_frame, text="🎵 Generate Beat", 
-                  command=self._generate_beat_from_studio,
-                  style='Accent.TButton').pack(side=tk.LEFT, padx=(0, 5))
-        
-        ttk.Button(control_frame, text="▶️ Play", 
-                  command=self._play_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="⏹️ Stop", 
-                  command=self._stop_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="💾 Save", 
-                  command=self._save_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="❌ Close", 
-                  command=self.beat_studio_window.destroy).pack(side=tk.RIGHT)
-    
-    def _setup_lyrics_input_tab(self, parent):
-        """Setup the lyrics input tab in Beat Studio."""
-        # Lyrics input area
-        lyrics_label = ttk.Label(parent, text="Enter your lyrics:", font=('Arial', 12, 'bold'))
-        lyrics_label.pack(anchor=tk.W, pady=(10, 5))
-        
-        self.studio_lyrics_text = tk.Text(parent, height=15, wrap=tk.WORD, 
-                                         font=('Consolas', 11))
-        self.studio_lyrics_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Quick actions
-        actions_frame = ttk.Frame(parent)
-        actions_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        ttk.Button(actions_frame, text="📋 Paste from Lyric Lab", 
-                  command=self._paste_from_lyric_lab).pack(side=tk.LEFT, padx=(0, 5))
-        
-        ttk.Button(actions_frame, text="🔄 Clear", 
-                  command=lambda: self.studio_lyrics_text.delete(1.0, tk.END)).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(actions_frame, text="🎯 Analyze Mood", 
-                  command=self._analyze_lyrics_mood).pack(side=tk.LEFT, padx=5)
-    
-    def _setup_beat_generation_tab(self, parent):
-        """Setup the beat generation tab."""
-        # Preset selection
-        preset_frame = ttk.LabelFrame(parent, text="🎛️ Beat Presets", padding=10)
-        preset_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        self.studio_preset_var = tk.StringVar(value="trap_modern")
-        presets = ["trap_modern", "boom_bap_classic", "drill_aggressive", "melodic_chill", "experimental"]
-        
-        for i, preset in enumerate(presets):
-            ttk.Radiobutton(preset_frame, text=preset.replace('_', ' ').title(), 
-                           variable=self.studio_preset_var, value=preset).grid(row=0, column=i, padx=5)
-        
-        # Manual controls
-        controls_frame = ttk.LabelFrame(parent, text="🎚️ Manual Controls", padding=10)
-        controls_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # BPM control
-        ttk.Label(controls_frame, text="BPM:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_bpm_var = tk.IntVar(value=140)
-        bpm_scale = ttk.Scale(controls_frame, from_=60, to=200, variable=self.studio_bpm_var, 
-                             orient=tk.HORIZONTAL, length=200)
-        bpm_scale.grid(row=0, column=1, padx=10, pady=5)
-        self.studio_bpm_label = ttk.Label(controls_frame, text="140")
-        self.studio_bpm_label.grid(row=0, column=2, pady=5)
-        
-        # Update BPM label
-        def update_bpm_label(*args):
-            self.studio_bpm_label.config(text=str(self.studio_bpm_var.get()))
-        self.studio_bpm_var.trace('w', update_bpm_label)
-        
-        # Scale selection
-        ttk.Label(controls_frame, text="Scale:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_scale_var = tk.StringVar(value="minor")
-        scale_combo = ttk.Combobox(controls_frame, textvariable=self.studio_scale_var,
-                                  values=["major", "minor", "pentatonic", "blues", "chromatic"])
-        scale_combo.grid(row=1, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Energy level
-        ttk.Label(controls_frame, text="Energy:").grid(row=2, column=0, sticky=tk.W, pady=5)
-        self.studio_energy_var = tk.IntVar(value=7)
-        energy_scale = ttk.Scale(controls_frame, from_=1, to=10, variable=self.studio_energy_var,
-                                orient=tk.HORIZONTAL, length=200)
-        energy_scale.grid(row=2, column=1, padx=10, pady=5)
-        self.studio_energy_label = ttk.Label(controls_frame, text="7")
-        self.studio_energy_label.grid(row=2, column=2, pady=5)
-        
-        # Update energy label
-        def update_energy_label(*args):
-            self.studio_energy_label.config(text=str(self.studio_energy_var.get()))
-        self.studio_energy_var.trace('w', update_energy_label)
-    
-    def _setup_effects_tab(self, parent):
-        """Setup the effects and mixing tab."""
-        # Effects controls
-        effects_frame = ttk.LabelFrame(parent, text="🎚️ Audio Effects", padding=10)
-        effects_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Reverb
-        ttk.Label(effects_frame, text="Reverb:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_reverb_var = tk.DoubleVar(value=0.3)
-        reverb_scale = ttk.Scale(effects_frame, from_=0.0, to=1.0, variable=self.studio_reverb_var,
-                                orient=tk.HORIZONTAL, length=200)
-        reverb_scale.grid(row=0, column=1, padx=10, pady=5)
-        
-        # Compression
-        ttk.Label(effects_frame, text="Compression:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_compression_var = tk.DoubleVar(value=0.5)
-        comp_scale = ttk.Scale(effects_frame, from_=0.0, to=1.0, variable=self.studio_compression_var,
-                              orient=tk.HORIZONTAL, length=200)
-        comp_scale.grid(row=1, column=1, padx=10, pady=5)
-        
-        # EQ controls
-        eq_frame = ttk.LabelFrame(effects_frame, text="🎛️ 3-Band EQ", padding=5)
-        eq_frame.grid(row=2, column=0, columnspan=3, sticky=tk.EW, pady=10)
-        
-        # Bass
-        ttk.Label(eq_frame, text="Bass:").grid(row=0, column=0, pady=2)
-        self.studio_bass_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_bass_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=0, column=1, padx=5)
-        
-        # Mid
-        ttk.Label(eq_frame, text="Mid:").grid(row=1, column=0, pady=2)
-        self.studio_mid_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_mid_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=1, column=1, padx=5)
-        
-        # Treble
-        ttk.Label(eq_frame, text="Treble:").grid(row=2, column=0, pady=2)
-        self.studio_treble_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_treble_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=2, column=1, padx=5)
-    
-    def _setup_export_tab(self, parent):
-        """Setup the export tab."""
-        export_frame = ttk.LabelFrame(parent, text="💾 Export Options", padding=10)
-        export_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Format selection
-        ttk.Label(export_frame, text="Format:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_format_var = tk.StringVar(value="WAV")
-        format_combo = ttk.Combobox(export_frame, textvariable=self.studio_format_var,
-                                   values=["WAV", "MP3", "FLAC"])
-        format_combo.grid(row=0, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Quality selection
-        ttk.Label(export_frame, text="Quality:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_quality_var = tk.StringVar(value="High")
-        quality_combo = ttk.Combobox(export_frame, textvariable=self.studio_quality_var,
-                                    values=["Low", "Medium", "High", "Studio"])
-        quality_combo.grid(row=1, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Export buttons
-        button_frame = ttk.Frame(export_frame)
-        button_frame.grid(row=2, column=0, columnspan=3, pady=20)
-        
-        ttk.Button(button_frame, text="💾 Export Audio", 
-                  command=self._export_studio_audio).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(button_frame, text="📁 Export Project", 
-                  command=self._export_studio_project).pack(side=tk.LEFT, padx=5)
-    
-    def _paste_from_lyric_lab(self):
-        """Paste lyrics from the main Lyric Lab tab."""
-        try:
-            lyrics = self.lyric_text.get(1.0, tk.END).strip()
-            if lyrics:
-                self.studio_lyrics_text.delete(1.0, tk.END)
-                self.studio_lyrics_text.insert(1.0, lyrics)
-                self.beat_status_label.config(text="Lyrics pasted from Lyric Lab", foreground='blue')
-            else:
-                messagebox.showwarning("No Lyrics", "No lyrics found in Lyric Lab to paste.")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to paste lyrics: {e}")
-    
-    def _analyze_lyrics_mood(self):
-        """Analyze the mood of the entered lyrics."""
-        lyrics = self.studio_lyrics_text.get(1.0, tk.END).strip()
-        if not lyrics:
-            messagebox.showwarning("No Lyrics", "Please enter some lyrics first.")
-            return
-        
-        # Simple mood analysis (you can enhance this with AI)
-        mood_keywords = {
-            'aggressive': ['fight', 'battle', 'war', 'rage', 'anger', 'destroy'],
-            'sad': ['cry', 'tears', 'pain', 'hurt', 'lonely', 'broken'],
-            'happy': ['joy', 'smile', 'love', 'celebration', 'party', 'good'],
-            'chill': ['relax', 'calm', 'peace', 'smooth', 'easy', 'flow']
-        }
-        
-        lyrics_lower = lyrics.lower()
-        mood_scores = {}
-        
-        for mood, keywords in mood_keywords.items():
-            score = sum(1 for keyword in keywords if keyword in lyrics_lower)
-            mood_scores[mood] = score
-        
-        detected_mood = max(mood_scores, key=mood_scores.get) if any(mood_scores.values()) else 'neutral'
-        
-        # Update UI based on mood
-        mood_settings = {
-            'aggressive': {'bpm': 160, 'energy': 9, 'preset': 'drill_aggressive'},
-            'sad': {'bpm': 80, 'energy': 3, 'preset': 'melodic_chill'},
-            'happy': {'bpm': 120, 'energy': 7, 'preset': 'trap_modern'},
-            'chill': {'bpm': 90, 'energy': 5, 'preset': 'boom_bap_classic'},
-            'neutral': {'bpm': 140, 'energy': 6, 'preset': 'trap_modern'}
-        }
-        
-        settings = mood_settings.get(detected_mood, mood_settings['neutral'])
-        
-        # Apply settings
-        if hasattr(self, 'studio_bpm_var'):
-            self.studio_bpm_var.set(settings['bpm'])
-        if hasattr(self, 'studio_energy_var'):
-            self.studio_energy_var.set(settings['energy'])
-        if hasattr(self, 'studio_preset_var'):
-            self.studio_preset_var.set(settings['preset'])
-        
-        self.beat_status_label.config(text=f"Mood detected: {detected_mood.title()}", foreground='green')
-        messagebox.showinfo("Mood Analysis", f"Detected mood: {detected_mood.title()}\nSettings adjusted automatically!")
-    
-    def _generate_beat_from_studio(self):
-        """Generate beat using the Beat Studio engine."""
-        lyrics = self.studio_lyrics_text.get(1.0, tk.END).strip()
-        if not lyrics:
-            messagebox.showwarning("No Lyrics", "Please enter some lyrics first.")
-            return
-        
-        try:
-            self.beat_status_label.config(text="Generating beat...", foreground='orange')
-            self.beat_studio_window.update()
-            
-            # Check if Beat Studio is available
-            if hasattr(self, 'beat_studio_integration') and beat_studio_integration and beat_studio_integration.is_available():
-                preset = self.studio_preset_var.get() if hasattr(self, 'studio_preset_var') else None
-                beat_data = beat_studio_integration.create_beat_from_lyrics(lyrics, preset_name=preset)
-                
-                if beat_data:
-                    self.current_studio_beat = beat_data
-                    self.beat_status_label.config(text="Beat generated successfully!", foreground='green')
-                    messagebox.showinfo("Success", "Beat generated successfully! Use the Play button to listen.")
-                else:
-                    self.beat_status_label.config(text="Failed to generate beat", foreground='red')
-                    messagebox.showerror("Error", "Failed to generate beat. Check the console for details.")
-            else:
-                # Fallback demo mode
-                self.beat_status_label.config(text="Demo mode - Beat simulated", foreground='blue')
-                messagebox.showinfo("Demo Mode", "Beat Studio is in demo mode. Beat generation simulated successfully!")
-                
-        except Exception as e:
-            self.beat_status_label.config(text="Error generating beat", foreground='red')
-            messagebox.showerror("Error", f"Failed to generate beat: {e}")
-    
-    def _play_studio_beat(self):
-        """Play the generated beat."""
-        if hasattr(self, 'current_studio_beat') and self.current_studio_beat:
-            try:
-                if beat_studio_integration and beat_studio_integration.is_available():
-                    if beat_studio_integration.play_current_beat():
-                        self.beat_status_label.config(text="Playing beat...", foreground='green')
-                    else:
-                        messagebox.showerror("Error", "Failed to play beat.")
-                else:
-                    messagebox.showinfo("Demo Mode", "🎵 Beat is playing! (Demo mode)")
-                    self.beat_status_label.config(text="Playing (demo)", foreground='blue')
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to play beat: {e}")
-        else:
-            messagebox.showwarning("No Beat", "Please generate a beat first.")
-    
-    def _stop_studio_beat(self):
-        """Stop the playing beat."""
-        try:
-            if beat_studio_integration and beat_studio_integration.is_available():
-                beat_studio_integration.stop_beat()
-            self.beat_status_label.config(text="Stopped", foreground='gray')
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to stop beat: {e}")
-    
-    def _save_studio_beat(self):
-        """Save the generated beat to file."""
-        if hasattr(self, 'current_studio_beat') and self.current_studio_beat:
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".wav",
-                filetypes=[("WAV files", "*.wav"), ("MP3 files", "*.mp3"), ("All files", "*.*")]
-            )
-            if file_path:
-                try:
-                    if beat_studio_integration and beat_studio_integration.is_available():
-                        if beat_studio_integration.save_beat(file_path):
-                            messagebox.showinfo("Success", f"Beat saved to {file_path}")
-                            self.beat_status_label.config(text="Beat saved", foreground='green')
-                        else:
-                            messagebox.showerror("Error", "Failed to save beat.")
-                    else:
-                        # Demo mode - create a placeholder file
-                        with open(file_path, 'w') as f:
-                            f.write("Demo beat file - Beat Studio integration required for actual audio")
-                        messagebox.showinfo("Demo Mode", f"Demo beat file saved to {file_path}")
-                except Exception as e:
-                    messagebox.showerror("Error", f"Failed to save beat: {e}")
-        else:
-            messagebox.showwarning("No Beat", "Please generate a beat first.")
-    
-    def _export_studio_audio(self):
-        """Export the beat as audio file."""
-        self._save_studio_beat()  # Reuse the save functionality
-    
-    def _export_studio_project(self):
-        """Export the entire project including lyrics and settings."""
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".json",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-        )
-        if file_path:
-            try:
-                project_data = {
-                    'lyrics': self.studio_lyrics_text.get(1.0, tk.END).strip(),
-                    'preset': self.studio_preset_var.get() if hasattr(self, 'studio_preset_var') else 'trap_modern',
-                    'bpm': self.studio_bpm_var.get() if hasattr(self, 'studio_bpm_var') else 140,
-                    'scale': self.studio_scale_var.get() if hasattr(self, 'studio_scale_var') else 'minor',
-                    'energy': self.studio_energy_var.get() if hasattr(self, 'studio_energy_var') else 7,
-                    'effects': {
-                        'reverb': self.studio_reverb_var.get() if hasattr(self, 'studio_reverb_var') else 0.3,
-                        'compression': self.studio_compression_var.get() if hasattr(self, 'studio_compression_var') else 0.5,
-                        'bass': self.studio_bass_var.get() if hasattr(self, 'studio_bass_var') else 0.0,
-                        'mid': self.studio_mid_var.get() if hasattr(self, 'studio_mid_var') else 0.0,
-                        'treble': self.studio_treble_var.get() if hasattr(self, 'studio_treble_var') else 0.0
-                    },
-                    'format': self.studio_format_var.get() if hasattr(self, 'studio_format_var') else 'WAV',
-                    'quality': self.studio_quality_var.get() if hasattr(self, 'studio_quality_var') else 'High'
-                }
-                
-                import json
-                with open(file_path, 'w') as f:
-                    json.dump(project_data, f, indent=2)
-                
-                messagebox.showinfo("Success", f"Project exported to {file_path}")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to export project: {e}")
-
-    
-    def _open_beat_studio(self):
-        """Open the professional Beat Studio interface."""
-        if not hasattr(self, 'beat_studio_window') or not self.beat_studio_window.winfo_exists():
-            self._create_beat_studio_window()
-        else:
-            self.beat_studio_window.lift()
-            self.beat_studio_window.focus()
-    
-    def _create_beat_studio_window(self):
-        """Create the professional Beat Studio window."""
-        self.beat_studio_window = tk.Toplevel(self.root)
-        self.beat_studio_window.title("🎵 Professional Beat Studio")
-        self.beat_studio_window.geometry("1000x700")
-        self.beat_studio_window.configure(bg='#1a1a1a')
-        
-        # Make it modal
-        self.beat_studio_window.transient(self.root)
-        self.beat_studio_window.grab_set()
-        
-        # Main container with modern styling
-        main_frame = ttk.Frame(self.beat_studio_window)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # Header
-        header_frame = ttk.Frame(main_frame)
-        header_frame.pack(fill=tk.X, pady=(0, 10))
-        
-        ttk.Label(header_frame, text="🎵 Professional Beat Studio", 
-                 font=('Arial', 16, 'bold')).pack(side=tk.LEFT)
-        
-        # Status label
-        self.beat_status_label = ttk.Label(header_frame, text="Ready", 
-                                          foreground='green')
-        self.beat_status_label.pack(side=tk.RIGHT)
-        
-        # Create notebook for different sections
-        studio_notebook = ttk.Notebook(main_frame)
-        studio_notebook.pack(fill=tk.BOTH, expand=True)
-        
-        # Lyrics Input Tab
-        lyrics_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(lyrics_frame, text="📝 Lyrics Input")
-        self._setup_lyrics_input_tab(lyrics_frame)
-        
-        # Beat Generation Tab
-        generation_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(generation_frame, text="🎛️ Beat Generation")
-        self._setup_beat_generation_tab(generation_frame)
-        
-        # Effects & Mixing Tab
-        effects_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(effects_frame, text="🎚️ Effects & Mixing")
-        self._setup_effects_tab(effects_frame)
-        
-        # Export Tab
-        export_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(export_frame, text="💾 Export")
-        self._setup_export_tab(export_frame)
-        
-        # Control buttons at bottom
-        control_frame = ttk.Frame(main_frame)
-        control_frame.pack(fill=tk.X, pady=(10, 0))
-        
-        ttk.Button(control_frame, text="🎵 Generate Beat", 
-                  command=self._generate_beat_from_studio,
-                  style='Accent.TButton').pack(side=tk.LEFT, padx=(0, 5))
-        
-        ttk.Button(control_frame, text="▶️ Play", 
-                  command=self._play_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="⏹️ Stop", 
-                  command=self._stop_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="💾 Save", 
-                  command=self._save_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="❌ Close", 
-                  command=self.beat_studio_window.destroy).pack(side=tk.RIGHT)
-    
-    def _setup_lyrics_input_tab(self, parent):
-        """Setup the lyrics input tab in Beat Studio."""
-        # Lyrics input area
-        lyrics_label = ttk.Label(parent, text="Enter your lyrics:", font=('Arial', 12, 'bold'))
-        lyrics_label.pack(anchor=tk.W, pady=(10, 5))
-        
-        self.studio_lyrics_text = tk.Text(parent, height=15, wrap=tk.WORD, 
-                                         font=('Consolas', 11))
-        self.studio_lyrics_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Quick actions
-        actions_frame = ttk.Frame(parent)
-        actions_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        ttk.Button(actions_frame, text="📋 Paste from Lyric Lab", 
-                  command=self._paste_from_lyric_lab).pack(side=tk.LEFT, padx=(0, 5))
-        
-        ttk.Button(actions_frame, text="🔄 Clear", 
-                  command=lambda: self.studio_lyrics_text.delete(1.0, tk.END)).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(actions_frame, text="🎯 Analyze Mood", 
-                  command=self._analyze_lyrics_mood).pack(side=tk.LEFT, padx=5)
-    
-    def _setup_beat_generation_tab(self, parent):
-        """Setup the beat generation tab."""
-        # Preset selection
-        preset_frame = ttk.LabelFrame(parent, text="🎛️ Beat Presets", padding=10)
-        preset_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        self.studio_preset_var = tk.StringVar(value="trap_modern")
-        presets = ["trap_modern", "boom_bap_classic", "drill_aggressive", "melodic_chill", "experimental"]
-        
-        for i, preset in enumerate(presets):
-            ttk.Radiobutton(preset_frame, text=preset.replace('_', ' ').title(), 
-                           variable=self.studio_preset_var, value=preset).grid(row=0, column=i, padx=5)
-        
-        # Manual controls
-        controls_frame = ttk.LabelFrame(parent, text="🎚️ Manual Controls", padding=10)
-        controls_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # BPM control
-        ttk.Label(controls_frame, text="BPM:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_bpm_var = tk.IntVar(value=140)
-        bpm_scale = ttk.Scale(controls_frame, from_=60, to=200, variable=self.studio_bpm_var, 
-                             orient=tk.HORIZONTAL, length=200)
-        bpm_scale.grid(row=0, column=1, padx=10, pady=5)
-        self.studio_bpm_label = ttk.Label(controls_frame, text="140")
-        self.studio_bpm_label.grid(row=0, column=2, pady=5)
-        
-        # Update BPM label
-        def update_bpm_label(*args):
-            self.studio_bpm_label.config(text=str(self.studio_bpm_var.get()))
-        self.studio_bpm_var.trace('w', update_bpm_label)
-        
-        # Scale selection
-        ttk.Label(controls_frame, text="Scale:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_scale_var = tk.StringVar(value="minor")
-        scale_combo = ttk.Combobox(controls_frame, textvariable=self.studio_scale_var,
-                                  values=["major", "minor", "pentatonic", "blues", "chromatic"])
-        scale_combo.grid(row=1, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Energy level
-        ttk.Label(controls_frame, text="Energy:").grid(row=2, column=0, sticky=tk.W, pady=5)
-        self.studio_energy_var = tk.IntVar(value=7)
-        energy_scale = ttk.Scale(controls_frame, from_=1, to=10, variable=self.studio_energy_var,
-                                orient=tk.HORIZONTAL, length=200)
-        energy_scale.grid(row=2, column=1, padx=10, pady=5)
-        self.studio_energy_label = ttk.Label(controls_frame, text="7")
-        self.studio_energy_label.grid(row=2, column=2, pady=5)
-        
-        # Update energy label
-        def update_energy_label(*args):
-            self.studio_energy_label.config(text=str(self.studio_energy_var.get()))
-        self.studio_energy_var.trace('w', update_energy_label)
-    
-    def _setup_effects_tab(self, parent):
-        """Setup the effects and mixing tab."""
-        # Effects controls
-        effects_frame = ttk.LabelFrame(parent, text="🎚️ Audio Effects", padding=10)
-        effects_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Reverb
-        ttk.Label(effects_frame, text="Reverb:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_reverb_var = tk.DoubleVar(value=0.3)
-        reverb_scale = ttk.Scale(effects_frame, from_=0.0, to=1.0, variable=self.studio_reverb_var,
-                                orient=tk.HORIZONTAL, length=200)
-        reverb_scale.grid(row=0, column=1, padx=10, pady=5)
-        
-        # Compression
-        ttk.Label(effects_frame, text="Compression:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_compression_var = tk.DoubleVar(value=0.5)
-        comp_scale = ttk.Scale(effects_frame, from_=0.0, to=1.0, variable=self.studio_compression_var,
-                              orient=tk.HORIZONTAL, length=200)
-        comp_scale.grid(row=1, column=1, padx=10, pady=5)
-        
-        # EQ controls
-        eq_frame = ttk.LabelFrame(effects_frame, text="🎛️ 3-Band EQ", padding=5)
-        eq_frame.grid(row=2, column=0, columnspan=3, sticky=tk.EW, pady=10)
-        
-        # Bass
-        ttk.Label(eq_frame, text="Bass:").grid(row=0, column=0, pady=2)
-        self.studio_bass_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_bass_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=0, column=1, padx=5)
-        
-        # Mid
-        ttk.Label(eq_frame, text="Mid:").grid(row=1, column=0, pady=2)
-        self.studio_mid_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_mid_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=1, column=1, padx=5)
-        
-        # Treble
-        ttk.Label(eq_frame, text="Treble:").grid(row=2, column=0, pady=2)
-        self.studio_treble_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_treble_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=2, column=1, padx=5)
-    
-    def _setup_export_tab(self, parent):
-        """Setup the export tab."""
-        export_frame = ttk.LabelFrame(parent, text="💾 Export Options", padding=10)
-        export_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Format selection
-        ttk.Label(export_frame, text="Format:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_format_var = tk.StringVar(value="WAV")
-        format_combo = ttk.Combobox(export_frame, textvariable=self.studio_format_var,
-                                   values=["WAV", "MP3", "FLAC"])
-        format_combo.grid(row=0, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Quality selection
-        ttk.Label(export_frame, text="Quality:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_quality_var = tk.StringVar(value="High")
-        quality_combo = ttk.Combobox(export_frame, textvariable=self.studio_quality_var,
-                                    values=["Low", "Medium", "High", "Studio"])
-        quality_combo.grid(row=1, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Export buttons
-        button_frame = ttk.Frame(export_frame)
-        button_frame.grid(row=2, column=0, columnspan=3, pady=20)
-        
-        ttk.Button(button_frame, text="💾 Export Audio", 
-                  command=self._export_studio_audio).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(button_frame, text="📁 Export Project", 
-                  command=self._export_studio_project).pack(side=tk.LEFT, padx=5)
-    
-    def _paste_from_lyric_lab(self):
-        """Paste lyrics from the main Lyric Lab tab."""
-        try:
-            lyrics = self.lyric_text.get(1.0, tk.END).strip()
-            if lyrics:
-                self.studio_lyrics_text.delete(1.0, tk.END)
-                self.studio_lyrics_text.insert(1.0, lyrics)
-                self.beat_status_label.config(text="Lyrics pasted from Lyric Lab", foreground='blue')
-            else:
-                messagebox.showwarning("No Lyrics", "No lyrics found in Lyric Lab to paste.")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to paste lyrics: {e}")
-    
-    def _analyze_lyrics_mood(self):
-        """Analyze the mood of the entered lyrics."""
-        lyrics = self.studio_lyrics_text.get(1.0, tk.END).strip()
-        if not lyrics:
-            messagebox.showwarning("No Lyrics", "Please enter some lyrics first.")
-            return
-        
-        # Simple mood analysis (you can enhance this with AI)
-        mood_keywords = {
-            'aggressive': ['fight', 'battle', 'war', 'rage', 'anger', 'destroy'],
-            'sad': ['cry', 'tears', 'pain', 'hurt', 'lonely', 'broken'],
-            'happy': ['joy', 'smile', 'love', 'celebration', 'party', 'good'],
-            'chill': ['relax', 'calm', 'peace', 'smooth', 'easy', 'flow']
-        }
-        
-        lyrics_lower = lyrics.lower()
-        mood_scores = {}
-        
-        for mood, keywords in mood_keywords.items():
-            score = sum(1 for keyword in keywords if keyword in lyrics_lower)
-            mood_scores[mood] = score
-        
-        detected_mood = max(mood_scores, key=mood_scores.get) if any(mood_scores.values()) else 'neutral'
-        
-        # Update UI based on mood
-        mood_settings = {
-            'aggressive': {'bpm': 160, 'energy': 9, 'preset': 'drill_aggressive'},
-            'sad': {'bpm': 80, 'energy': 3, 'preset': 'melodic_chill'},
-            'happy': {'bpm': 120, 'energy': 7, 'preset': 'trap_modern'},
-            'chill': {'bpm': 90, 'energy': 5, 'preset': 'boom_bap_classic'},
-            'neutral': {'bpm': 140, 'energy': 6, 'preset': 'trap_modern'}
-        }
-        
-        settings = mood_settings.get(detected_mood, mood_settings['neutral'])
-        
-        # Apply settings
-        if hasattr(self, 'studio_bpm_var'):
-            self.studio_bpm_var.set(settings['bpm'])
-        if hasattr(self, 'studio_energy_var'):
-            self.studio_energy_var.set(settings['energy'])
-        if hasattr(self, 'studio_preset_var'):
-            self.studio_preset_var.set(settings['preset'])
-        
-        self.beat_status_label.config(text=f"Mood detected: {detected_mood.title()}", foreground='green')
-        messagebox.showinfo("Mood Analysis", f"Detected mood: {detected_mood.title()}\nSettings adjusted automatically!")
-    
-    def _generate_beat_from_studio(self):
-        """Generate beat using the Beat Studio engine."""
-        lyrics = self.studio_lyrics_text.get(1.0, tk.END).strip()
-        if not lyrics:
-            messagebox.showwarning("No Lyrics", "Please enter some lyrics first.")
-            return
-        
-        try:
-            self.beat_status_label.config(text="Generating beat...", foreground='orange')
-            self.beat_studio_window.update()
-            
-            # Check if Beat Studio is available
-            if hasattr(self, 'beat_studio_integration') and beat_studio_integration and beat_studio_integration.is_available():
-                preset = self.studio_preset_var.get() if hasattr(self, 'studio_preset_var') else None
-                beat_data = beat_studio_integration.create_beat_from_lyrics(lyrics, preset_name=preset)
-                
-                if beat_data:
-                    self.current_studio_beat = beat_data
-                    self.beat_status_label.config(text="Beat generated successfully!", foreground='green')
-                    messagebox.showinfo("Success", "Beat generated successfully! Use the Play button to listen.")
-                else:
-                    self.beat_status_label.config(text="Failed to generate beat", foreground='red')
-                    messagebox.showerror("Error", "Failed to generate beat. Check the console for details.")
-            else:
-                # Fallback demo mode
-                self.beat_status_label.config(text="Demo mode - Beat simulated", foreground='blue')
-                messagebox.showinfo("Demo Mode", "Beat Studio is in demo mode. Beat generation simulated successfully!")
-                
-        except Exception as e:
-            self.beat_status_label.config(text="Error generating beat", foreground='red')
-            messagebox.showerror("Error", f"Failed to generate beat: {e}")
-    
-    def _play_studio_beat(self):
-        """Play the generated beat."""
-        if hasattr(self, 'current_studio_beat') and self.current_studio_beat:
-            try:
-                if beat_studio_integration and beat_studio_integration.is_available():
-                    if beat_studio_integration.play_current_beat():
-                        self.beat_status_label.config(text="Playing beat...", foreground='green')
-                    else:
-                        messagebox.showerror("Error", "Failed to play beat.")
-                else:
-                    messagebox.showinfo("Demo Mode", "🎵 Beat is playing! (Demo mode)")
-                    self.beat_status_label.config(text="Playing (demo)", foreground='blue')
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to play beat: {e}")
-        else:
-            messagebox.showwarning("No Beat", "Please generate a beat first.")
-    
-    def _stop_studio_beat(self):
-        """Stop the playing beat."""
-        try:
-            if beat_studio_integration and beat_studio_integration.is_available():
-                beat_studio_integration.stop_beat()
-            self.beat_status_label.config(text="Stopped", foreground='gray')
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to stop beat: {e}")
-    
-    def _save_studio_beat(self):
-        """Save the generated beat to file."""
-        if hasattr(self, 'current_studio_beat') and self.current_studio_beat:
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".wav",
-                filetypes=[("WAV files", "*.wav"), ("MP3 files", "*.mp3"), ("All files", "*.*")]
-            )
-            if file_path:
-                try:
-                    if beat_studio_integration and beat_studio_integration.is_available():
-                        if beat_studio_integration.save_beat(file_path):
-                            messagebox.showinfo("Success", f"Beat saved to {file_path}")
-                            self.beat_status_label.config(text="Beat saved", foreground='green')
-                        else:
-                            messagebox.showerror("Error", "Failed to save beat.")
-                    else:
-                        # Demo mode - create a placeholder file
-                        with open(file_path, 'w') as f:
-                            f.write("Demo beat file - Beat Studio integration required for actual audio")
-                        messagebox.showinfo("Demo Mode", f"Demo beat file saved to {file_path}")
-                except Exception as e:
-                    messagebox.showerror("Error", f"Failed to save beat: {e}")
-        else:
-            messagebox.showwarning("No Beat", "Please generate a beat first.")
-    
-    def _export_studio_audio(self):
-        """Export the beat as audio file."""
-        self._save_studio_beat()  # Reuse the save functionality
-    
-    def _export_studio_project(self):
-        """Export the entire project including lyrics and settings."""
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".json",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-        )
-        if file_path:
-            try:
-                project_data = {
-                    'lyrics': self.studio_lyrics_text.get(1.0, tk.END).strip(),
-                    'preset': self.studio_preset_var.get() if hasattr(self, 'studio_preset_var') else 'trap_modern',
-                    'bpm': self.studio_bpm_var.get() if hasattr(self, 'studio_bpm_var') else 140,
-                    'scale': self.studio_scale_var.get() if hasattr(self, 'studio_scale_var') else 'minor',
-                    'energy': self.studio_energy_var.get() if hasattr(self, 'studio_energy_var') else 7,
-                    'effects': {
-                        'reverb': self.studio_reverb_var.get() if hasattr(self, 'studio_reverb_var') else 0.3,
-                        'compression': self.studio_compression_var.get() if hasattr(self, 'studio_compression_var') else 0.5,
-                        'bass': self.studio_bass_var.get() if hasattr(self, 'studio_bass_var') else 0.0,
-                        'mid': self.studio_mid_var.get() if hasattr(self, 'studio_mid_var') else 0.0,
-                        'treble': self.studio_treble_var.get() if hasattr(self, 'studio_treble_var') else 0.0
-                    },
-                    'format': self.studio_format_var.get() if hasattr(self, 'studio_format_var') else 'WAV',
-                    'quality': self.studio_quality_var.get() if hasattr(self, 'studio_quality_var') else 'High'
-                }
-                
-                import json
-                with open(file_path, 'w') as f:
-                    json.dump(project_data, f, indent=2)
-                
-                messagebox.showinfo("Success", f"Project exported to {file_path}")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to export project: {e}")
-
-
-    def _open_beat_studio(self):
-        """Open the professional Beat Studio interface."""
-        if not hasattr(self, 'beat_studio_window') or not self.beat_studio_window.winfo_exists():
-            self._create_beat_studio_window()
-        else:
-            self.beat_studio_window.lift()
-            self.beat_studio_window.focus()
-    
-    def _create_beat_studio_window(self):
-        """Create the professional Beat Studio window."""
-        self.beat_studio_window = tk.Toplevel(self.root)
-        self.beat_studio_window.title("🎵 Professional Beat Studio")
-        self.beat_studio_window.geometry("1000x700")
-        self.beat_studio_window.configure(bg='#1a1a1a')
-        
-        # Make it modal
-        self.beat_studio_window.transient(self.root)
-        self.beat_studio_window.grab_set()
-        
-        # Main container with modern styling
-        main_frame = ttk.Frame(self.beat_studio_window)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # Header
-        header_frame = ttk.Frame(main_frame)
-        header_frame.pack(fill=tk.X, pady=(0, 10))
-        
-        ttk.Label(header_frame, text="🎵 Professional Beat Studio", 
-                 font=('Arial', 16, 'bold')).pack(side=tk.LEFT)
-        
-        # Status label
-        self.beat_status_label = ttk.Label(header_frame, text="Ready", 
-                                          foreground='green')
-        self.beat_status_label.pack(side=tk.RIGHT)
-        
-        # Create notebook for different sections
-        studio_notebook = ttk.Notebook(main_frame)
-        studio_notebook.pack(fill=tk.BOTH, expand=True)
-        
-        # Lyrics Input Tab
-        lyrics_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(lyrics_frame, text="📝 Lyrics Input")
-        self._setup_lyrics_input_tab(lyrics_frame)
-        
-        # Beat Generation Tab
-        generation_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(generation_frame, text="🎛️ Beat Generation")
-        self._setup_beat_generation_tab(generation_frame)
-        
-        # Effects & Mixing Tab
-        effects_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(effects_frame, text="🎚️ Effects & Mixing")
-        self._setup_effects_tab(effects_frame)
-        
-        # Export Tab
-        export_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(export_frame, text="💾 Export")
-        self._setup_export_tab(export_frame)
-        
-        # Control buttons at bottom
-        control_frame = ttk.Frame(main_frame)
-        control_frame.pack(fill=tk.X, pady=(10, 0))
-        
-        ttk.Button(control_frame, text="🎵 Generate Beat", 
-                  command=self._generate_beat_from_studio,
-                  style='Accent.TButton').pack(side=tk.LEFT, padx=(0, 5))
-        
-        ttk.Button(control_frame, text="▶️ Play", 
-                  command=self._play_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="⏹️ Stop", 
-                  command=self._stop_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="💾 Save", 
-                  command=self._save_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="❌ Close", 
-                  command=self.beat_studio_window.destroy).pack(side=tk.RIGHT)
-    
-    def _setup_lyrics_input_tab(self, parent):
-        """Setup the lyrics input tab in Beat Studio."""
-        # Lyrics input area
-        lyrics_label = ttk.Label(parent, text="Enter your lyrics:", font=('Arial', 12, 'bold'))
-        lyrics_label.pack(anchor=tk.W, pady=(10, 5))
-        
-        self.studio_lyrics_text = tk.Text(parent, height=15, wrap=tk.WORD, 
-                                         font=('Consolas', 11))
-        self.studio_lyrics_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Quick actions
-        actions_frame = ttk.Frame(parent)
-        actions_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        ttk.Button(actions_frame, text="📋 Paste from Lyric Lab", 
-                  command=self._paste_from_lyric_lab).pack(side=tk.LEFT, padx=(0, 5))
-        
-        ttk.Button(actions_frame, text="🔄 Clear", 
-                  command=lambda: self.studio_lyrics_text.delete(1.0, tk.END)).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(actions_frame, text="🎯 Analyze Mood", 
-                  command=self._analyze_lyrics_mood).pack(side=tk.LEFT, padx=5)
-    
-    def _setup_beat_generation_tab(self, parent):
-        """Setup the beat generation tab."""
-        # Preset selection
-        preset_frame = ttk.LabelFrame(parent, text="🎛️ Beat Presets", padding=10)
-        preset_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        self.studio_preset_var = tk.StringVar(value="trap_modern")
-        presets = ["trap_modern", "boom_bap_classic", "drill_aggressive", "melodic_chill", "experimental"]
-        
-        for i, preset in enumerate(presets):
-            ttk.Radiobutton(preset_frame, text=preset.replace('_', ' ').title(), 
-                           variable=self.studio_preset_var, value=preset).grid(row=0, column=i, padx=5)
-        
-        # Manual controls
-        controls_frame = ttk.LabelFrame(parent, text="🎚️ Manual Controls", padding=10)
-        controls_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # BPM control
-        ttk.Label(controls_frame, text="BPM:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_bpm_var = tk.IntVar(value=140)
-        bpm_scale = ttk.Scale(controls_frame, from_=60, to=200, variable=self.studio_bpm_var, 
-                             orient=tk.HORIZONTAL, length=200)
-        bpm_scale.grid(row=0, column=1, padx=10, pady=5)
-        self.studio_bpm_label = ttk.Label(controls_frame, text="140")
-        self.studio_bpm_label.grid(row=0, column=2, pady=5)
-        
-        # Update BPM label
-        def update_bpm_label(*args):
-            self.studio_bpm_label.config(text=str(self.studio_bpm_var.get()))
-        self.studio_bpm_var.trace('w', update_bpm_label)
-        
-        # Scale selection
-        ttk.Label(controls_frame, text="Scale:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_scale_var = tk.StringVar(value="minor")
-        scale_combo = ttk.Combobox(controls_frame, textvariable=self.studio_scale_var,
-                                  values=["major", "minor", "pentatonic", "blues", "chromatic"])
-        scale_combo.grid(row=1, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Energy level
-        ttk.Label(controls_frame, text="Energy:").grid(row=2, column=0, sticky=tk.W, pady=5)
-        self.studio_energy_var = tk.IntVar(value=7)
-        energy_scale = ttk.Scale(controls_frame, from_=1, to=10, variable=self.studio_energy_var,
-                                orient=tk.HORIZONTAL, length=200)
-        energy_scale.grid(row=2, column=1, padx=10, pady=5)
-        self.studio_energy_label = ttk.Label(controls_frame, text="7")
-        self.studio_energy_label.grid(row=2, column=2, pady=5)
-        
-        # Update energy label
-        def update_energy_label(*args):
-            self.studio_energy_label.config(text=str(self.studio_energy_var.get()))
-        self.studio_energy_var.trace('w', update_energy_label)
-    
-    def _setup_effects_tab(self, parent):
-        """Setup the effects and mixing tab."""
-        # Effects controls
-        effects_frame = ttk.LabelFrame(parent, text="🎚️ Audio Effects", padding=10)
-        effects_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Reverb
-        ttk.Label(effects_frame, text="Reverb:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_reverb_var = tk.DoubleVar(value=0.3)
-        reverb_scale = ttk.Scale(effects_frame, from_=0.0, to=1.0, variable=self.studio_reverb_var,
-                                orient=tk.HORIZONTAL, length=200)
-        reverb_scale.grid(row=0, column=1, padx=10, pady=5)
-        
-        # Compression
-        ttk.Label(effects_frame, text="Compression:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_compression_var = tk.DoubleVar(value=0.5)
-        comp_scale = ttk.Scale(effects_frame, from_=0.0, to=1.0, variable=self.studio_compression_var,
-                              orient=tk.HORIZONTAL, length=200)
-        comp_scale.grid(row=1, column=1, padx=10, pady=5)
-        
-        # EQ controls
-        eq_frame = ttk.LabelFrame(effects_frame, text="🎛️ 3-Band EQ", padding=5)
-        eq_frame.grid(row=2, column=0, columnspan=3, sticky=tk.EW, pady=10)
-        
-        # Bass
-        ttk.Label(eq_frame, text="Bass:").grid(row=0, column=0, pady=2)
-        self.studio_bass_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_bass_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=0, column=1, padx=5)
-        
-        # Mid
-        ttk.Label(eq_frame, text="Mid:").grid(row=1, column=0, pady=2)
-        self.studio_mid_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_mid_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=1, column=1, padx=5)
-        
-        # Treble
-        ttk.Label(eq_frame, text="Treble:").grid(row=2, column=0, pady=2)
-        self.studio_treble_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_treble_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=2, column=1, padx=5)
-    
-    def _setup_export_tab(self, parent):
-        """Setup the export tab."""
-        export_frame = ttk.LabelFrame(parent, text="💾 Export Options", padding=10)
-        export_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Format selection
-        ttk.Label(export_frame, text="Format:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_format_var = tk.StringVar(value="WAV")
-        format_combo = ttk.Combobox(export_frame, textvariable=self.studio_format_var,
-                                   values=["WAV", "MP3", "FLAC"])
-        format_combo.grid(row=0, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Quality selection
-        ttk.Label(export_frame, text="Quality:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_quality_var = tk.StringVar(value="High")
-        quality_combo = ttk.Combobox(export_frame, textvariable=self.studio_quality_var,
-                                    values=["Low", "Medium", "High", "Studio"])
-        quality_combo.grid(row=1, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Export buttons
-        button_frame = ttk.Frame(export_frame)
-        button_frame.grid(row=2, column=0, columnspan=3, pady=20)
-        
-        ttk.Button(button_frame, text="💾 Export Audio", 
-                  command=self._export_studio_audio).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(button_frame, text="📁 Export Project", 
-                  command=self._export_studio_project).pack(side=tk.LEFT, padx=5)
-    
-    def _paste_from_lyric_lab(self):
-        """Paste lyrics from the main Lyric Lab tab."""
-        try:
-            lyrics = self.lyric_text.get(1.0, tk.END).strip()
-            if lyrics:
-                self.studio_lyrics_text.delete(1.0, tk.END)
-                self.studio_lyrics_text.insert(1.0, lyrics)
-                self.beat_status_label.config(text="Lyrics pasted from Lyric Lab", foreground='blue')
-            else:
-                messagebox.showwarning("No Lyrics", "No lyrics found in Lyric Lab to paste.")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to paste lyrics: {e}")
-    
-    def _analyze_lyrics_mood(self):
-        """Analyze the mood of the entered lyrics."""
-        lyrics = self.studio_lyrics_text.get(1.0, tk.END).strip()
-        if not lyrics:
-            messagebox.showwarning("No Lyrics", "Please enter some lyrics first.")
-            return
-        
-        # Simple mood analysis (you can enhance this with AI)
-        mood_keywords = {
-            'aggressive': ['fight', 'battle', 'war', 'rage', 'anger', 'destroy'],
-            'sad': ['cry', 'tears', 'pain', 'hurt', 'lonely', 'broken'],
-            'happy': ['joy', 'smile', 'love', 'celebration', 'party', 'good'],
-            'chill': ['relax', 'calm', 'peace', 'smooth', 'easy', 'flow']
-        }
-        
-        lyrics_lower = lyrics.lower()
-        mood_scores = {}
-        
-        for mood, keywords in mood_keywords.items():
-            score = sum(1 for keyword in keywords if keyword in lyrics_lower)
-            mood_scores[mood] = score
-        
-        detected_mood = max(mood_scores, key=mood_scores.get) if any(mood_scores.values()) else 'neutral'
-        
-        # Update UI based on mood
-        mood_settings = {
-            'aggressive': {'bpm': 160, 'energy': 9, 'preset': 'drill_aggressive'},
-            'sad': {'bpm': 80, 'energy': 3, 'preset': 'melodic_chill'},
-            'happy': {'bpm': 120, 'energy': 7, 'preset': 'trap_modern'},
-            'chill': {'bpm': 90, 'energy': 5, 'preset': 'boom_bap_classic'},
-            'neutral': {'bpm': 140, 'energy': 6, 'preset': 'trap_modern'}
-        }
-        
-        settings = mood_settings.get(detected_mood, mood_settings['neutral'])
-        
-        # Apply settings
-        if hasattr(self, 'studio_bpm_var'):
-            self.studio_bpm_var.set(settings['bpm'])
-        if hasattr(self, 'studio_energy_var'):
-            self.studio_energy_var.set(settings['energy'])
-        if hasattr(self, 'studio_preset_var'):
-            self.studio_preset_var.set(settings['preset'])
-        
-        self.beat_status_label.config(text=f"Mood detected: {detected_mood.title()}", foreground='green')
-        messagebox.showinfo("Mood Analysis", f"Detected mood: {detected_mood.title()}\nSettings adjusted automatically!")
-    
-    def _generate_beat_from_studio(self):
-        """Generate beat using the Beat Studio engine."""
-        lyrics = self.studio_lyrics_text.get(1.0, tk.END).strip()
-        if not lyrics:
-            messagebox.showwarning("No Lyrics", "Please enter some lyrics first.")
-            return
-        
-        try:
-            self.beat_status_label.config(text="Generating beat...", foreground='orange')
-            self.beat_studio_window.update()
-            
-            # Check if Beat Studio is available
-            if hasattr(self, 'beat_studio_integration') and beat_studio_integration and beat_studio_integration.is_available():
-                preset = self.studio_preset_var.get() if hasattr(self, 'studio_preset_var') else None
-                beat_data = beat_studio_integration.create_beat_from_lyrics(lyrics, preset_name=preset)
-                
-                if beat_data:
-                    self.current_studio_beat = beat_data
-                    self.beat_status_label.config(text="Beat generated successfully!", foreground='green')
-                    messagebox.showinfo("Success", "Beat generated successfully! Use the Play button to listen.")
-                else:
-                    self.beat_status_label.config(text="Failed to generate beat", foreground='red')
-                    messagebox.showerror("Error", "Failed to generate beat. Check the console for details.")
-            else:
-                # Fallback demo mode
-                self.beat_status_label.config(text="Demo mode - Beat simulated", foreground='blue')
-                messagebox.showinfo("Demo Mode", "Beat Studio is in demo mode. Beat generation simulated successfully!")
-                
-        except Exception as e:
-            self.beat_status_label.config(text="Error generating beat", foreground='red')
-            messagebox.showerror("Error", f"Failed to generate beat: {e}")
-    
-    def _play_studio_beat(self):
-        """Play the generated beat."""
-        if hasattr(self, 'current_studio_beat') and self.current_studio_beat:
-            try:
-                if beat_studio_integration and beat_studio_integration.is_available():
-                    if beat_studio_integration.play_current_beat():
-                        self.beat_status_label.config(text="Playing beat...", foreground='green')
-                    else:
-                        messagebox.showerror("Error", "Failed to play beat.")
-                else:
-                    messagebox.showinfo("Demo Mode", "🎵 Beat is playing! (Demo mode)")
-                    self.beat_status_label.config(text="Playing (demo)", foreground='blue')
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to play beat: {e}")
-        else:
-            messagebox.showwarning("No Beat", "Please generate a beat first.")
-    
-    def _stop_studio_beat(self):
-        """Stop the playing beat."""
-        try:
-            if beat_studio_integration and beat_studio_integration.is_available():
-                beat_studio_integration.stop_beat()
-            self.beat_status_label.config(text="Stopped", foreground='gray')
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to stop beat: {e}")
-    
-    def _save_studio_beat(self):
-        """Save the generated beat to file."""
-        if hasattr(self, 'current_studio_beat') and self.current_studio_beat:
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".wav",
-                filetypes=[("WAV files", "*.wav"), ("MP3 files", "*.mp3"), ("All files", "*.*")]
-            )
-            if file_path:
-                try:
-                    if beat_studio_integration and beat_studio_integration.is_available():
-                        if beat_studio_integration.save_beat(file_path):
-                            messagebox.showinfo("Success", f"Beat saved to {file_path}")
-                            self.beat_status_label.config(text="Beat saved", foreground='green')
-                        else:
-                            messagebox.showerror("Error", "Failed to save beat.")
-                    else:
-                        # Demo mode - create a placeholder file
-                        with open(file_path, 'w') as f:
-                            f.write("Demo beat file - Beat Studio integration required for actual audio")
-                        messagebox.showinfo("Demo Mode", f"Demo beat file saved to {file_path}")
-                except Exception as e:
-                    messagebox.showerror("Error", f"Failed to save beat: {e}")
-        else:
-            messagebox.showwarning("No Beat", "Please generate a beat first.")
-    
-    def _export_studio_audio(self):
-        """Export the beat as audio file."""
-        self._save_studio_beat()  # Reuse the save functionality
-    
-    def _export_studio_project(self):
-        """Export the entire project including lyrics and settings."""
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".json",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-        )
-        if file_path:
-            try:
-                project_data = {
-                    'lyrics': self.studio_lyrics_text.get(1.0, tk.END).strip(),
-                    'preset': self.studio_preset_var.get() if hasattr(self, 'studio_preset_var') else 'trap_modern',
-                    'bpm': self.studio_bpm_var.get() if hasattr(self, 'studio_bpm_var') else 140,
-                    'scale': self.studio_scale_var.get() if hasattr(self, 'studio_scale_var') else 'minor',
-                    'energy': self.studio_energy_var.get() if hasattr(self, 'studio_energy_var') else 7,
-                    'effects': {
-                        'reverb': self.studio_reverb_var.get() if hasattr(self, 'studio_reverb_var') else 0.3,
-                        'compression': self.studio_compression_var.get() if hasattr(self, 'studio_compression_var') else 0.5,
-                        'bass': self.studio_bass_var.get() if hasattr(self, 'studio_bass_var') else 0.0,
-                        'mid': self.studio_mid_var.get() if hasattr(self, 'studio_mid_var') else 0.0,
-                        'treble': self.studio_treble_var.get() if hasattr(self, 'studio_treble_var') else 0.0
-                    },
-                    'format': self.studio_format_var.get() if hasattr(self, 'studio_format_var') else 'WAV',
-                    'quality': self.studio_quality_var.get() if hasattr(self, 'studio_quality_var') else 'High'
-                }
-                
-                import json
-                with open(file_path, 'w') as f:
-                    json.dump(project_data, f, indent=2)
-                
-                messagebox.showinfo("Success", f"Project exported to {file_path}")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to export project: {e}")
-
-    
-    def _open_beat_studio(self):
-        """Open the professional Beat Studio interface."""
-        if not hasattr(self, 'beat_studio_window') or not self.beat_studio_window.winfo_exists():
-            self._create_beat_studio_window()
-        else:
-            self.beat_studio_window.lift()
-            self.beat_studio_window.focus()
-    
-    def _create_beat_studio_window(self):
-        """Create the professional Beat Studio window."""
-        self.beat_studio_window = tk.Toplevel(self.root)
-        self.beat_studio_window.title("🎵 Professional Beat Studio")
-        self.beat_studio_window.geometry("1000x700")
-        self.beat_studio_window.configure(bg='#1a1a1a')
-        
-        # Make it modal
-        self.beat_studio_window.transient(self.root)
-        self.beat_studio_window.grab_set()
-        
-        # Main container with modern styling
-        main_frame = ttk.Frame(self.beat_studio_window)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # Header
-        header_frame = ttk.Frame(main_frame)
-        header_frame.pack(fill=tk.X, pady=(0, 10))
-        
-        ttk.Label(header_frame, text="🎵 Professional Beat Studio", 
-                 font=('Arial', 16, 'bold')).pack(side=tk.LEFT)
-        
-        # Status label
-        self.beat_status_label = ttk.Label(header_frame, text="Ready", 
-                                          foreground='green')
-        self.beat_status_label.pack(side=tk.RIGHT)
-        
-        # Create notebook for different sections
-        studio_notebook = ttk.Notebook(main_frame)
-        studio_notebook.pack(fill=tk.BOTH, expand=True)
-        
-        # Lyrics Input Tab
-        lyrics_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(lyrics_frame, text="📝 Lyrics Input")
-        self._setup_lyrics_input_tab(lyrics_frame)
-        
-        # Beat Generation Tab
-        generation_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(generation_frame, text="🎛️ Beat Generation")
-        self._setup_beat_generation_tab(generation_frame)
-        
-        # Effects & Mixing Tab
-        effects_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(effects_frame, text="🎚️ Effects & Mixing")
-        self._setup_effects_tab(effects_frame)
-        
-        # Export Tab
-        export_frame = ttk.Frame(studio_notebook)
-        studio_notebook.add(export_frame, text="💾 Export")
-        self._setup_export_tab(export_frame)
-        
-        # Control buttons at bottom
-        control_frame = ttk.Frame(main_frame)
-        control_frame.pack(fill=tk.X, pady=(10, 0))
-        
-        ttk.Button(control_frame, text="🎵 Generate Beat", 
-                  command=self._generate_beat_from_studio,
-                  style='Accent.TButton').pack(side=tk.LEFT, padx=(0, 5))
-        
-        ttk.Button(control_frame, text="▶️ Play", 
-                  command=self._play_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="⏹️ Stop", 
-                  command=self._stop_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="💾 Save", 
-                  command=self._save_studio_beat).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(control_frame, text="❌ Close", 
-                  command=self.beat_studio_window.destroy).pack(side=tk.RIGHT)
-    
-    def _setup_lyrics_input_tab(self, parent):
-        """Setup the lyrics input tab in Beat Studio."""
-        # Lyrics input area
-        lyrics_label = ttk.Label(parent, text="Enter your lyrics:", font=('Arial', 12, 'bold'))
-        lyrics_label.pack(anchor=tk.W, pady=(10, 5))
-        
-        self.studio_lyrics_text = tk.Text(parent, height=15, wrap=tk.WORD, 
-                                         font=('Consolas', 11))
-        self.studio_lyrics_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Quick actions
-        actions_frame = ttk.Frame(parent)
-        actions_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        ttk.Button(actions_frame, text="📋 Paste from Lyric Lab", 
-                  command=self._paste_from_lyric_lab).pack(side=tk.LEFT, padx=(0, 5))
-        
-        ttk.Button(actions_frame, text="🔄 Clear", 
-                  command=lambda: self.studio_lyrics_text.delete(1.0, tk.END)).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(actions_frame, text="🎯 Analyze Mood", 
-                  command=self._analyze_lyrics_mood).pack(side=tk.LEFT, padx=5)
-    
-    def _setup_beat_generation_tab(self, parent):
-        """Setup the beat generation tab."""
-        # Preset selection
-        preset_frame = ttk.LabelFrame(parent, text="🎛️ Beat Presets", padding=10)
-        preset_frame.pack(fill=tk.X, padx=10, pady=5)
-        
-        self.studio_preset_var = tk.StringVar(value="trap_modern")
-        presets = ["trap_modern", "boom_bap_classic", "drill_aggressive", "melodic_chill", "experimental"]
-        
-        for i, preset in enumerate(presets):
-            ttk.Radiobutton(preset_frame, text=preset.replace('_', ' ').title(), 
-                           variable=self.studio_preset_var, value=preset).grid(row=0, column=i, padx=5)
-        
-        # Manual controls
-        controls_frame = ttk.LabelFrame(parent, text="🎚️ Manual Controls", padding=10)
-        controls_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # BPM control
-        ttk.Label(controls_frame, text="BPM:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_bpm_var = tk.IntVar(value=140)
-        bpm_scale = ttk.Scale(controls_frame, from_=60, to=200, variable=self.studio_bpm_var, 
-                             orient=tk.HORIZONTAL, length=200)
-        bpm_scale.grid(row=0, column=1, padx=10, pady=5)
-        self.studio_bpm_label = ttk.Label(controls_frame, text="140")
-        self.studio_bpm_label.grid(row=0, column=2, pady=5)
-        
-        # Update BPM label
-        def update_bpm_label(*args):
-            self.studio_bpm_label.config(text=str(self.studio_bpm_var.get()))
-        self.studio_bpm_var.trace('w', update_bpm_label)
-        
-        # Scale selection
-        ttk.Label(controls_frame, text="Scale:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_scale_var = tk.StringVar(value="minor")
-        scale_combo = ttk.Combobox(controls_frame, textvariable=self.studio_scale_var,
-                                  values=["major", "minor", "pentatonic", "blues", "chromatic"])
-        scale_combo.grid(row=1, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Energy level
-        ttk.Label(controls_frame, text="Energy:").grid(row=2, column=0, sticky=tk.W, pady=5)
-        self.studio_energy_var = tk.IntVar(value=7)
-        energy_scale = ttk.Scale(controls_frame, from_=1, to=10, variable=self.studio_energy_var,
-                                orient=tk.HORIZONTAL, length=200)
-        energy_scale.grid(row=2, column=1, padx=10, pady=5)
-        self.studio_energy_label = ttk.Label(controls_frame, text="7")
-        self.studio_energy_label.grid(row=2, column=2, pady=5)
-        
-        # Update energy label
-        def update_energy_label(*args):
-            self.studio_energy_label.config(text=str(self.studio_energy_var.get()))
-        self.studio_energy_var.trace('w', update_energy_label)
-    
-    def _setup_effects_tab(self, parent):
-        """Setup the effects and mixing tab."""
-        # Effects controls
-        effects_frame = ttk.LabelFrame(parent, text="🎚️ Audio Effects", padding=10)
-        effects_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Reverb
-        ttk.Label(effects_frame, text="Reverb:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_reverb_var = tk.DoubleVar(value=0.3)
-        reverb_scale = ttk.Scale(effects_frame, from_=0.0, to=1.0, variable=self.studio_reverb_var,
-                                orient=tk.HORIZONTAL, length=200)
-        reverb_scale.grid(row=0, column=1, padx=10, pady=5)
-        
-        # Compression
-        ttk.Label(effects_frame, text="Compression:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_compression_var = tk.DoubleVar(value=0.5)
-        comp_scale = ttk.Scale(effects_frame, from_=0.0, to=1.0, variable=self.studio_compression_var,
-                              orient=tk.HORIZONTAL, length=200)
-        comp_scale.grid(row=1, column=1, padx=10, pady=5)
-        
-        # EQ controls
-        eq_frame = ttk.LabelFrame(effects_frame, text="🎛️ 3-Band EQ", padding=5)
-        eq_frame.grid(row=2, column=0, columnspan=3, sticky=tk.EW, pady=10)
-        
-        # Bass
-        ttk.Label(eq_frame, text="Bass:").grid(row=0, column=0, pady=2)
-        self.studio_bass_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_bass_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=0, column=1, padx=5)
-        
-        # Mid
-        ttk.Label(eq_frame, text="Mid:").grid(row=1, column=0, pady=2)
-        self.studio_mid_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_mid_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=1, column=1, padx=5)
-        
-        # Treble
-        ttk.Label(eq_frame, text="Treble:").grid(row=2, column=0, pady=2)
-        self.studio_treble_var = tk.DoubleVar(value=0.0)
-        ttk.Scale(eq_frame, from_=-12, to=12, variable=self.studio_treble_var,
-                 orient=tk.HORIZONTAL, length=150).grid(row=2, column=1, padx=5)
-    
-    def _setup_export_tab(self, parent):
-        """Setup the export tab."""
-        export_frame = ttk.LabelFrame(parent, text="💾 Export Options", padding=10)
-        export_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        
-        # Format selection
-        ttk.Label(export_frame, text="Format:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.studio_format_var = tk.StringVar(value="WAV")
-        format_combo = ttk.Combobox(export_frame, textvariable=self.studio_format_var,
-                                   values=["WAV", "MP3", "FLAC"])
-        format_combo.grid(row=0, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Quality selection
-        ttk.Label(export_frame, text="Quality:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.studio_quality_var = tk.StringVar(value="High")
-        quality_combo = ttk.Combobox(export_frame, textvariable=self.studio_quality_var,
-                                    values=["Low", "Medium", "High", "Studio"])
-        quality_combo.grid(row=1, column=1, padx=10, pady=5, sticky=tk.W)
-        
-        # Export buttons
-        button_frame = ttk.Frame(export_frame)
-        button_frame.grid(row=2, column=0, columnspan=3, pady=20)
-        
-        ttk.Button(button_frame, text="💾 Export Audio", 
-                  command=self._export_studio_audio).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(button_frame, text="📁 Export Project", 
-                  command=self._export_studio_project).pack(side=tk.LEFT, padx=5)
-    
-    def _paste_from_lyric_lab(self):
-        """Paste lyrics from the main Lyric Lab tab."""
-        try:
-            lyrics = self.lyric_text.get(1.0, tk.END).strip()
-            if lyrics:
-                self.studio_lyrics_text.delete(1.0, tk.END)
-                self.studio_lyrics_text.insert(1.0, lyrics)
-                self.beat_status_label.config(text="Lyrics pasted from Lyric Lab", foreground='blue')
-            else:
-                messagebox.showwarning("No Lyrics", "No lyrics found in Lyric Lab to paste.")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to paste lyrics: {e}")
-    
-    def _analyze_lyrics_mood(self):
-        """Analyze the mood of the entered lyrics."""
-        lyrics = self.studio_lyrics_text.get(1.0, tk.END).strip()
-        if not lyrics:
-            messagebox.showwarning("No Lyrics", "Please enter some lyrics first.")
-            return
-        
-        # Simple mood analysis (you can enhance this with AI)
-        mood_keywords = {
-            'aggressive': ['fight', 'battle', 'war', 'rage', 'anger', 'destroy'],
-            'sad': ['cry', 'tears', 'pain', 'hurt', 'lonely', 'broken'],
-            'happy': ['joy', 'smile', 'love', 'celebration', 'party', 'good'],
-            'chill': ['relax', 'calm', 'peace', 'smooth', 'easy', 'flow']
-        }
-        
-        lyrics_lower = lyrics.lower()
-        mood_scores = {}
-        
-        for mood, keywords in mood_keywords.items():
-            score = sum(1 for keyword in keywords if keyword in lyrics_lower)
-            mood_scores[mood] = score
-        
-        detected_mood = max(mood_scores, key=mood_scores.get) if any(mood_scores.values()) else 'neutral'
-        
-        # Update UI based on mood
-        mood_settings = {
-            'aggressive': {'bpm': 160, 'energy': 9, 'preset': 'drill_aggressive'},
-            'sad': {'bpm': 80, 'energy': 3, 'preset': 'melodic_chill'},
-            'happy': {'bpm': 120, 'energy': 7, 'preset': 'trap_modern'},
-            'chill': {'bpm': 90, 'energy': 5, 'preset': 'boom_bap_classic'},
-            'neutral': {'bpm': 140, 'energy': 6, 'preset': 'trap_modern'}
-        }
-        
-        settings = mood_settings.get(detected_mood, mood_settings['neutral'])
-        
-        # Apply settings
-        if hasattr(self, 'studio_bpm_var'):
-            self.studio_bpm_var.set(settings['bpm'])
-        if hasattr(self, 'studio_energy_var'):
-            self.studio_energy_var.set(settings['energy'])
-        if hasattr(self, 'studio_preset_var'):
-            self.studio_preset_var.set(settings['preset'])
-        
-        self.beat_status_label.config(text=f"Mood detected: {detected_mood.title()}", foreground='green')
-        messagebox.showinfo("Mood Analysis", f"Detected mood: {detected_mood.title()}\nSettings adjusted automatically!")
-    
-    def _generate_beat_from_studio(self):
-        """Generate beat using the Beat Studio engine."""
-        lyrics = self.studio_lyrics_text.get(1.0, tk.END).strip()
-        if not lyrics:
-            messagebox.showwarning("No Lyrics", "Please enter some lyrics first.")
-            return
-        
-        try:
-            self.beat_status_label.config(text="Generating beat...", foreground='orange')
-            self.beat_studio_window.update()
-            
-            # Check if Beat Studio is available
-            if hasattr(self, 'beat_studio_integration') and beat_studio_integration and beat_studio_integration.is_available():
-                preset = self.studio_preset_var.get() if hasattr(self, 'studio_preset_var') else None
-                beat_data = beat_studio_integration.create_beat_from_lyrics(lyrics, preset_name=preset)
-                
-                if beat_data:
-                    self.current_studio_beat = beat_data
-                    self.beat_status_label.config(text="Beat generated successfully!", foreground='green')
-                    messagebox.showinfo("Success", "Beat generated successfully! Use the Play button to listen.")
-                else:
-                    self.beat_status_label.config(text="Failed to generate beat", foreground='red')
-                    messagebox.showerror("Error", "Failed to generate beat. Check the console for details.")
-            else:
-                # Fallback demo mode
-                self.beat_status_label.config(text="Demo mode - Beat simulated", foreground='blue')
-                messagebox.showinfo("Demo Mode", "Beat Studio is in demo mode. Beat generation simulated successfully!")
-                
-        except Exception as e:
-            self.beat_status_label.config(text="Error generating beat", foreground='red')
-            messagebox.showerror("Error", f"Failed to generate beat: {e}")
-    
-    def _play_studio_beat(self):
-        """Play the generated beat."""
-        if hasattr(self, 'current_studio_beat') and self.current_studio_beat:
-            try:
-                if beat_studio_integration and beat_studio_integration.is_available():
-                    if beat_studio_integration.play_current_beat():
-                        self.beat_status_label.config(text="Playing beat...", foreground='green')
-                    else:
-                        messagebox.showerror("Error", "Failed to play beat.")
-                else:
-                    messagebox.showinfo("Demo Mode", "🎵 Beat is playing! (Demo mode)")
-                    self.beat_status_label.config(text="Playing (demo)", foreground='blue')
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to play beat: {e}")
-        else:
-            messagebox.showwarning("No Beat", "Please generate a beat first.")
-    
-    def _stop_studio_beat(self):
-        """Stop the playing beat."""
-        try:
-            if beat_studio_integration and beat_studio_integration.is_available():
-                beat_studio_integration.stop_beat()
-            self.beat_status_label.config(text="Stopped", foreground='gray')
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to stop beat: {e}")
-    
-    def _save_studio_beat(self):
-        """Save the generated beat to file."""
-        if hasattr(self, 'current_studio_beat') and self.current_studio_beat:
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".wav",
-                filetypes=[("WAV files", "*.wav"), ("MP3 files", "*.mp3"), ("All files", "*.*")]
-            )
-            if file_path:
-                try:
-                    if beat_studio_integration and beat_studio_integration.is_available():
-                        if beat_studio_integration.save_beat(file_path):
-                            messagebox.showinfo("Success", f"Beat saved to {file_path}")
-                            self.beat_status_label.config(text="Beat saved", foreground='green')
-                        else:
-                            messagebox.showerror("Error", "Failed to save beat.")
-                    else:
-                        # Demo mode - create a placeholder file
-                        with open(file_path, 'w') as f:
-                            f.write("Demo beat file - Beat Studio integration required for actual audio")
-                        messagebox.showinfo("Demo Mode", f"Demo beat file saved to {file_path}")
-                except Exception as e:
-                    messagebox.showerror("Error", f"Failed to save beat: {e}")
-        else:
-            messagebox.showwarning("No Beat", "Please generate a beat first.")
-    
-    def _export_studio_audio(self):
-        """Export the beat as audio file."""
-        self._save_studio_beat()  # Reuse the save functionality
-    
-    def _export_studio_project(self):
-        """Export the entire project including lyrics and settings."""
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".json",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-        )
-        if file_path:
-            try:
-                project_data = {
-                    'lyrics': self.studio_lyrics_text.get(1.0, tk.END).strip(),
-                    'preset': self.studio_preset_var.get() if hasattr(self, 'studio_preset_var') else 'trap_modern',
-                    'bpm': self.studio_bpm_var.get() if hasattr(self, 'studio_bpm_var') else 140,
-                    'scale': self.studio_scale_var.get() if hasattr(self, 'studio_scale_var') else 'minor',
-                    'energy': self.studio_energy_var.get() if hasattr(self, 'studio_energy_var') else 7,
-                    'effects': {
-                        'reverb': self.studio_reverb_var.get() if hasattr(self, 'studio_reverb_var') else 0.3,
-                        'compression': self.studio_compression_var.get() if hasattr(self, 'studio_compression_var') else 0.5,
-                        'bass': self.studio_bass_var.get() if hasattr(self, 'studio_bass_var') else 0.0,
-                        'mid': self.studio_mid_var.get() if hasattr(self, 'studio_mid_var') else 0.0,
-                        'treble': self.studio_treble_var.get() if hasattr(self, 'studio_treble_var') else 0.0
-                    },
-                    'format': self.studio_format_var.get() if hasattr(self, 'studio_format_var') else 'WAV',
-                    'quality': self.studio_quality_var.get() if hasattr(self, 'studio_quality_var') else 'High'
-                }
-                
-                import json
-                with open(file_path, 'w') as f:
-                    json.dump(project_data, f, indent=2)
-                
-                messagebox.showinfo("Success", f"Project exported to {file_path}")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to export project: {e}")
-
     def run(self):
         """Run the enhanced CodedSwitch application."""
         try:
@@ -6944,8 +5300,8 @@ Features:
   🤖 Intelligent AI assistant with chat
   🎤 Advanced Lyric Lab with beat generation
   🎧 Real-time audio beat creation and playback
-  📊 Comprehensive flow and rhyme analysis
-  🔒 Story Protocol IP protection integration
+   Comprehensive flow and rhyme analysis
+   Story Protocol IP protection integration
         """
     )
     
@@ -6960,7 +5316,9 @@ Features:
     args = parser.parse_args()
 
     # Set up logging level
-    logging.getLogger().setLevel(logging.DEBUG if args.debug else logging.INFO)
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logger.info("🔧 Debug logging enabled")
 
     try:
         print("🎤 CodedSwitch Enhanced Edition v2.1")
