@@ -536,4 +536,11 @@ body {
   .nav-menu {
     gap: 0.5rem;
   }
-} 
+}
+
+/* Logo background override */
+.hero, .hero-section,
+.features, .features-section,
+.pricing, .pricing-section {
+  background: transparent !important;
+}
