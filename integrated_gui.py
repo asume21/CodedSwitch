@@ -47,9 +47,10 @@ if sys.platform == "win32":
 
 # Optional imports with fallbacks
 try:
-    import librosa
+    import librosa  # optional dependency for beat studio features
     LIBROSA_AVAILABLE = True
-except ImportError:
+except (ModuleNotFoundError, ImportError):  # pragma: no cover
+    librosa = None  # type: ignore
     LIBROSA_AVAILABLE = False
     # Note: logger not available yet, will log later
 # Beat Studio integration
@@ -60,6 +61,14 @@ except ImportError as e:
     print(f"⚠️ Beat Studio integration not available: {e}")
     BEAT_STUDIO_AVAILABLE = False
     beat_studio_integration = None
+
+# Lyric Lab integration
+try:
+    from lyric_lab_integration import LyricLabIntegration
+    print("✅ Lyric Lab integration loaded successfully!")
+except ImportError as e:
+    print(f"⚠️ Lyric Lab integration not available: {e}")
+    LyricLabIntegration = None
 
 # ============================================================================
 # CONSTANTS AND CONFIGURATION
@@ -96,15 +105,17 @@ class UnicodeStreamHandler(logging.StreamHandler):
     def emit(self, record):
         try:
             msg = self.format(record)
-            stream = self.stream
-            # Replace any characters that can't be encoded with a replacement character
-            stream.write(msg + self.terminator)
-            self.flush()
+            stream = getattr(self, 'stream', None)
+            if stream is not None:
+                # Replace any characters that can't be encoded with a replacement character
+                stream.write(msg + self.terminator)
+                self.flush()
         except UnicodeEncodeError:
             # If we can't encode the message, try to log a simplified version
             try:
-                stream.write(record.msg.encode('ascii', 'replace').decode('ascii') + '\n')
-                self.flush()
+                if getattr(self, 'stream', None) is not None:
+                    self.stream.write(record.msg.encode('ascii', 'replace').decode('ascii') + '\n')
+                    self.flush()
             except:
                 pass  # Give up if we still can't log
 
@@ -143,7 +154,7 @@ try:
     from security.vulnerability_scanner import VulnerabilityScanner
     from integrated_ai import IntegratedTranslatorAI
 except ImportError as e:
-    logger.warning(f"Failed to import some modules: {e}. Using fallback implementations.")
+    root_logger.warning(f"Failed to import some modules: {e}. Using fallback implementations.")
     
     # Create fallback classes if imports fail
     class PremiumManager:
@@ -274,7 +285,7 @@ class ConfigManager:
                     if key in defaults and type(value) == type(defaults[key]):
                         defaults[key] = value
             except Exception as e:
-                logger.warning(f"Failed to load config: {e}")
+                root_logger.warning(f"Failed to load config: {e}")
         
         return defaults
     
@@ -286,7 +297,7 @@ class ConfigManager:
                 json.dump(self.config, f, indent=2, ensure_ascii=False)
             return True
         except Exception as e:
-            logger.error(f"Failed to save config: {e}")
+            root_logger.error(f"Failed to save config: {e}")
             return False
     
     def get(self, key: str, default=None):
@@ -309,7 +320,7 @@ class ErrorHandler:
                 try:
                     return func(self, *args, **kwargs)
                 except Exception as e:
-                    logger.error(f"Error in {operation_name}: {e}", exc_info=True)
+                    root_logger.error(f"Error in {operation_name}: {e}", exc_info=True)
                     if hasattr(self, 'status_var'):
                         self.status_var.set(f"❌ {operation_name} failed")
                     
@@ -372,7 +383,7 @@ class ResourceManager:
                     os.unlink(file_path)
                 self.temp_files.remove(file_path)
             except Exception as e:
-                logger.warning(f"Failed to remove temp file {file_path}: {e}")
+                root_logger.warning(f"Failed to remove temp file {file_path}: {e}")
     
     def init_audio(self) -> bool:
         """Initialize audio system safely."""
@@ -384,10 +395,10 @@ class ResourceManager:
                 buffer=Constants.AUDIO_BUFFER_SIZE
             )
             self.audio_initialized = True
-            logger.info("🎵 Audio system initialized successfully!")
+            root_logger.info("🎵 Audio system initialized successfully!")
             return True
         except Exception as e:
-            logger.warning(f"⚠️ Audio initialization failed: {e}")
+            root_logger.warning(f"⚠️ Audio initialization failed: {e}")
             self.audio_initialized = False
             return False
     
@@ -398,11 +409,11 @@ class ResourceManager:
                 pygame.mixer.quit()
                 self.audio_initialized = False
         except Exception as e:
-            logger.warning(f"Audio cleanup error: {e}")
+            root_logger.warning(f"Audio cleanup error: {e}")
     
     def cleanup_all(self):
         """Clean up all resources."""
-        logger.info("Cleaning up application resources...")
+        root_logger.info("Cleaning up application resources...")
         self.cleanup_temp_files()
         self.cleanup_audio()
 
@@ -495,10 +506,24 @@ class IntegratedTranslatorGUI:
         self.notebook.add(self.lyric_tab, text="  🎤 Lyric Lab  ")
         
         # Initialize components
+        
+        # Floating chat window reference
+        self.chat_floater = None
+        # Lyric Lab integration instance
+        if 'LyricLabIntegration' in globals() and LyricLabIntegration:
+            try:
+                self.lyric_lab_integration = LyricLabIntegration(self)
+            except Exception as e:
+                root_logger.warning(f"Lyric Lab integration initialization failed: {e}")
         self._setup_translator_tab()
         self._setup_chatbot_tab()
         self._setup_security_tab()
         self._setup_lyric_lab_tab()
+        # Music Lab tab
+        try:
+            self._setup_music_lab_tab()
+        except Exception as e:
+            root_logger.warning(f"Music Lab setup skipped: {e}")
         # Optional: add the professional Beat Studio tab if the integration is available
         try:
             self._setup_beat_studio_if_available()
@@ -517,7 +542,7 @@ class IntegratedTranslatorGUI:
         # Bind cleanup events
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
         
-        logger.info("CodedSwitch GUI initialized successfully")
+        root_logger.info("CodedSwitch GUI initialized successfully")
 
     def _set_application_icon(self):
         """Set application icon if available."""
@@ -527,7 +552,7 @@ class IntegratedTranslatorGUI:
                 try:
                     self.root.iconbitmap(default=icon_path)
                 except Exception as e:
-                    logger.warning(f"Failed to set icon: {e}")
+                    root_logger.warning(f"Failed to set icon: {e}")
 
     def _setup_beat_studio_if_available(self):
         """Add the Beat Studio tab to the notebook if the integration is available."""
@@ -537,6 +562,29 @@ class IntegratedTranslatorGUI:
                 root_logger.info("Beat Studio tab initialized.")
             except Exception as e:
                 root_logger.warning(f"Beat Studio initialization failed: {e}")
+
+    def _setup_music_lab_tab(self):
+        """Add the Music Lab tab to the notebook if available."""
+        try:
+            import importlib
+            try:
+                music_lab_tab_module = importlib.import_module('gui_modules.music_lab_tab')
+            except ModuleNotFoundError:
+                # Fallback: if running from bundled executable where paths differ
+                music_lab_tab_module = importlib.import_module('music_lab_tab')
+
+            # Instantiate the MusicLabTab (it is itself a Frame)
+            self.music_lab_component = music_lab_tab_module.MusicLabTab(self)
+            # Add it to the notebook as a new tab
+            self.notebook.add(self.music_lab_component, text="  🎶 Music Lab  ")
+            root_logger.info("Music Lab tab added successfully!")
+        except Exception as e:
+            # Gracefully degrade – show reason inside the tab and log the error
+            root_logger.warning(f"Music Lab initialization failed: {e}")
+            # Fallback UI when the tab cannot be created
+            fallback_frame = ttk.Frame(self.notebook)
+            ttk.Label(fallback_frame, text=f"Music Lab unavailable: {e}").pack(padx=20, pady=20)
+            self.notebook.add(fallback_frame, text="  🎶 Music Lab  ")
 
     def _initialize_ai_interface(self):
         """Initialize the AI interface with better error handling."""
@@ -554,7 +602,7 @@ class IntegratedTranslatorGUI:
                             credentials = json.load(f)
                             self.gemini_api_key = credentials.get("api_key")
                     except Exception as e:
-                        logger.warning(f"Failed to load credentials from file: {e}")
+                        root_logger.warning(f"Failed to load credentials from file: {e}")
             
             if self.gemini_api_key and InputValidator.validate_api_key(self.gemini_api_key):
                 # Initialize Gemini interface
@@ -562,13 +610,17 @@ class IntegratedTranslatorGUI:
                     api_key=self.gemini_api_key,
                     model_name=self.gemini_model
                 )
-                logger.info(f"Successfully initialized AI with model: {self.gemini_model}")
+                root_logger.info(f"Successfully initialized AI with model: {self.gemini_model}")
+                # Provide AI interface alias and pass to Lyric Lab
+                self.ai_interface = self.ai
+                if hasattr(self, 'lyric_lab_integration'):
+                    self.lyric_lab_integration.ai_interface = self.ai
             else:
                 # Prompt for API key if not found or invalid
                 self.root.after(100, self.prompt_for_api_key)
                 
         except Exception as e:
-            logger.error(f"Failed to initialize AI: {str(e)}")
+            root_logger.error(f"Failed to initialize AI: {str(e)}")
             self.root.after(100, lambda: self._show_ai_initialization_error(str(e)))
 
     def _show_ai_initialization_error(self, error_msg: str):
@@ -647,7 +699,7 @@ class IntegratedTranslatorGUI:
             try:
                 self.root.bind(shortcut, lambda e, cmd=command: self._safe_execute_shortcut(cmd, e))
             except Exception as e:
-                logger.warning(f"Failed to bind shortcut {shortcut}: {e}")
+                root_logger.warning(f"Failed to bind shortcut {shortcut}: {e}")
         
         # Store shortcuts for help display
         self.keyboard_shortcuts = shortcuts
@@ -665,7 +717,7 @@ class IntegratedTranslatorGUI:
             else:
                 command(event)
         except Exception as e:
-            logger.error(f"Shortcut execution error: {e}")
+            root_logger.error(f"Shortcut execution error: {e}")
             self.status_var.set(f"❌ Shortcut error: {str(e)[:50]}")
 
     # ============================================================================
@@ -1069,8 +1121,10 @@ class IntegratedTranslatorGUI:
             
     def _setup_chatbot_tab(self):
         """Set up the enhanced chatbot tab UI."""
-        main_frame = ttk.Frame(self.chatbot_tab, padding=10)
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        # Container that can be moved between tab and floating window
+        self.chat_frame = ttk.Frame(self.chatbot_tab, padding=10)
+        self.chat_frame.pack(fill=tk.BOTH, expand=True)
+        main_frame = self.chat_frame  # alias used by rest of method
 
         # Header
         header_frame = ttk.Frame(main_frame)
@@ -1085,6 +1139,15 @@ class IntegratedTranslatorGUI:
         # Chat controls
         controls_frame = ttk.Frame(header_frame)
         controls_frame.pack(side=tk.RIGHT)
+        
+        # Pop-out / Dock toggle
+        self.pop_btn = ttk.Button(
+            controls_frame,
+            text="↗ Pop-out",
+            command=self._toggle_chat_docking,
+            width=12
+        )
+        self.pop_btn.pack(side=tk.RIGHT, padx=(5, 0))
         
         ttk.Button(
             controls_frame,
@@ -1169,6 +1232,191 @@ class IntegratedTranslatorGUI:
 
         # Add enhanced welcome message
         self._add_welcome_message()
+
+    def _toggle_chat_docking(self):
+        """Toggle between docked (tab) and undocked (floating) chat window.
+        This new strategy avoids *any* widget re-parenting. Instead we keep the
+        original chat UI inside the chatbot tab and build a **second** chat UI
+        in a floating `Toplevel` when requested. All chat messages are routed
+        through `_add_chat_message`, ensuring both displays remain perfectly in
+        sync and the full conversation context is preserved."""
+
+        if getattr(self, "chat_floater", None) is None:
+            # -----------------  Create floating window  -----------------
+            try:
+                self.chat_floater = tk.Toplevel(self.root)
+                self.chat_floater.title("🤖 Astutely Assistant")
+                self.chat_floater.geometry("450x600")
+                self.chat_floater.attributes('-topmost', True)
+
+                floater_main = ttk.Frame(self.chat_floater, padding=10)
+                floater_main.pack(fill=tk.BOTH, expand=True)
+
+                # ---------- Chat display ----------
+                self.floater_chat_display = TtkScrolledText(
+                    floater_main,
+                    wrap=tk.WORD,
+                    width=80,
+                    height=25,
+                    font=("Segoe UI", self.font_size),
+                    state=tk.DISABLED
+                )
+                self.floater_chat_display.pack(fill=tk.BOTH, expand=True)
+                self._configure_chat_tags(
+                    self.floater_chat_display.text if hasattr(self.floater_chat_display, "text") else self.floater_chat_display
+                )
+
+                # Populate existing history
+                for sender, msg, tag, ts in getattr(self, "chat_history", []):
+                    self._insert_message_to_display(
+                        self.floater_chat_display,
+                        sender,
+                        msg,
+                        tag,
+                        ts,
+                        silent=True,
+                    )
+
+                # ---------- Input + Send ----------
+                input_frame = ttk.Frame(floater_main)
+                input_frame.pack(fill=tk.X, pady=(10, 0))
+
+                self.floater_message_input = TtkScrolledText(
+                    input_frame,
+                    wrap=tk.WORD,
+                    width=70,
+                    height=4,
+                    font=("Segoe UI", self.font_size),
+                )
+                self.floater_message_input.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+                send_btn = ttk.Button(
+                    input_frame,
+                    text="🚀 Send",
+                    command=self._floater_send_message,
+                    style="primary.TButton",
+                    width=12,
+                )
+                send_btn.pack(side=tk.RIGHT, padx=(10, 0))
+
+                # Key bindings for quick send
+                self.floater_message_input.bind("<Return>", self._floater_send_message)
+                self.floater_message_input.bind("<Shift-Return>", lambda e: "break")
+                self.floater_message_input.bind("<Control-Return>", self._floater_send_message)
+
+                self.floater_message_input.focus_set()
+
+                # Update toggle button
+                self.pop_btn.config(text="⇦ Dock")
+
+                # Closing the floater should dock back
+                self.chat_floater.protocol("WM_DELETE_WINDOW", self._toggle_chat_docking)
+            except Exception as e:
+                root_logger.error(f"Failed to create floating chat window: {e}")
+        else:
+            # -----------------  Destroy floating window  -----------------
+            try:
+                # Preserve any partially typed text
+                if getattr(self, "floater_message_input", None):
+                    pending_text = self.floater_message_input.get("1.0", tk.END).strip()
+                    if pending_text:
+                        self.message_input.delete("1.0", tk.END)
+                        self.message_input.insert("1.0", pending_text)
+
+                self.chat_floater.destroy()
+                self.chat_floater = None
+                self.floater_chat_display = None
+                self.floater_message_input = None
+
+                # Update toggle button
+                self.pop_btn.config(text="↗ Pop-out")
+            except Exception as e:
+                root_logger.error(f"Failed to dock chat window: {e}")
+
+    # ------------------------------------------------------------------
+    # Helper utilities – keep both chat displays perfectly in sync
+    # ------------------------------------------------------------------
+    def _configure_chat_tags(self, text_widget):
+        """Apply the standard chat text tags to *text_widget*."""
+        try:
+            text_widget.tag_configure("user_msg", foreground="#2196F3", font=("Segoe UI", self.font_size, "bold"))
+            text_widget.tag_configure("assistant_msg", foreground="#4CAF50", font=("Segoe UI", self.font_size))
+            text_widget.tag_configure("system_msg", foreground="#FF9800", font=("Segoe UI", self.font_size - 1, "italic"))
+            text_widget.tag_configure("error_msg", foreground="#F44336", font=("Segoe UI", self.font_size, "bold"))
+            text_widget.tag_configure("timestamp", foreground="#757575", font=("Segoe UI", self.font_size - 2))
+        except tk.TclError:
+            pass  # Widget might be destroyed during shutdown
+
+    def _insert_message_to_display(self, widget, sender, message, tag, ts, silent=False):
+        """Low-level helper to insert a formatted message into *widget*."""
+        if not widget:
+            return
+        text_obj = widget.text if hasattr(widget, "text") else widget
+        text_obj.config(state=tk.NORMAL)
+        formatted = f"{sender} ({ts:%I:%M %p}):\n{message}\n\n"
+        text_obj.insert(tk.END, formatted, tag or "system_msg")
+        text_obj.see(tk.END)
+        text_obj.config(state=tk.DISABLED)
+        if not silent:
+            self.root.update_idletasks()
+
+    def _add_chat_message(self, sender: str, message: str, tag: str = None):
+        """Centralised entry point for recording & displaying chat messages."""
+        ts = datetime.now()
+        if not hasattr(self, "chat_history"):
+            self.chat_history = []
+        self.chat_history.append((sender, message, tag, ts))
+
+        # Main tab
+        self._insert_message_to_display(self.chat_display, sender, message, tag, ts)
+        # Floating window (if open)
+        if getattr(self, "floater_chat_display", None):
+            self._insert_message_to_display(self.floater_chat_display, sender, message, tag, ts, silent=True)
+
+    def _floater_send_message(self, event=None):
+        """Send a message originating from the floating chat window."""
+        # Shift+Return → newline
+        if event and event.state & 0x1:
+            return "break"
+        if not getattr(self, "floater_message_input", None):
+            return "break"
+        message = self.floater_message_input.get("1.0", tk.END).strip()
+        if not message:
+            return "break"
+
+        # Clear input
+        self.floater_message_input.delete("1.0", tk.END)
+
+        # Re-use the existing send logic by temporarily pointing message_input
+        original_input = self.message_input
+        self.message_input = self.floater_message_input  # dummy to keep any existing logic happy
+        try:
+            # Manually duplicate logic from the primary send flow
+            self._add_chat_message("You", message, "user_msg")
+            thinking_msg = "🤔 Thinking…"
+            self._add_chat_message("Assistant", thinking_msg, "assistant_msg")
+
+            def _get_response():
+                try:
+                    if hasattr(self, "ai") and hasattr(self.ai, "chat_response"):
+                        response = self.ai.chat_response(message)
+                    else:
+                        response = (
+                            "This is a demo response. Provide a valid API key for full AI functionality."
+                        )
+                    self.root.after(0, lambda: self._handle_response_received(response))
+                except Exception as exc:
+                    error_msg = f"Sorry, I encountered an error: {exc}"
+                    self.root.after(0, lambda: self._handle_response_received(error_msg))
+
+            thread = threading.Thread(target=_get_response, daemon=True)
+            if hasattr(self, "resource_manager"):
+                self.resource_manager.add_thread(thread)
+            thread.start()
+        finally:
+            # Restore original input reference
+            self.message_input = original_input
+        return "break"
 
     def _setup_security_tab(self):
         """Set up the enhanced security scanning tab."""
@@ -1307,299 +1555,39 @@ class IntegratedTranslatorGUI:
         self.scan_progress.pack(side=tk.RIGHT, padx=(10, 0))
 
     def _setup_lyric_lab_tab(self):
-        """🎤 Set up the enhanced Lyric Lab with all features at the top! 🎤"""
-        main_frame = ttk.Frame(self.lyric_tab)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # Enhanced Header
-        header_frame = ttk.Frame(main_frame)
-        header_frame.pack(fill=tk.X, pady=(0, 15))
-        
-        ttk.Label(
-            header_frame, 
-            text="🎤 CodedSwitch Lyric Lab - AI-Powered Creative Studio", 
-            style="Title.TLabel"
-        ).pack(side=tk.LEFT)
-        
-        ttk.Button(
-            header_frame,
-            text="🛡️ IP Protection",
-            command=self._register_lyrics_on_story,
-            style="success.TButton"
-        ).pack(side=tk.RIGHT)
-        
-        # 🔥 ALL ANALYSIS TOOLS - PERFECTLY ORGANIZED AT THE TOP! 🔥
-        tools_frame = ttk.LabelFrame(main_frame, text="🎵 AI Analysis & Generation Tools", padding=15)
-        tools_frame.pack(fill=tk.X, pady=(0, 15))
-        
-        # FIRST ROW - Core Analysis Tools
-        row1_frame = ttk.Frame(tools_frame)
-        row1_frame.pack(fill=tk.X, pady=(0, 10))
-        
-        tools_row1 = [
-            ("📊 Flow Analysis", self._analyze_lyric_flow, "info.TButton"),
-            ("🎵 Rhyme Checker", self._check_rhyme_scheme, "primary.TButton"),
-            ("📈 Statistics", self._show_lyric_stats, "secondary.TButton"),
-            ("🎧 Beat Suggest", self._suggest_beat_type, "warning.TButton")
-        ]
-        
-        for text, command, style in tools_row1:
-            ttk.Button(
-                row1_frame,
-                text=text,
-                command=command,
-                style=style,
-                width=18
-            ).pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
-        
-        # SECOND ROW - Advanced AI Tools
-        row2_frame = ttk.Frame(tools_frame)
-        row2_frame.pack(fill=tk.X, pady=(0, 10))
-        
-        tools_row2 = [
-            ("✏️ AI Editor", self._suggest_lyric_edits, "info.TButton"),
-            ("🎤 Vocal Guide", self._generate_vocal_guide, "primary.TButton"),
-            ("🔀 Style Switch", self._switch_lyric_style, "warning.TButton"),
-            ("🎲 Randomize", self._randomize_lyrics, "danger.TButton")
-        ]
-        
-        for text, command, style in tools_row2:
-            ttk.Button(
-                row2_frame,
-                text=text,
-                command=command,
-                style=style,
-                width=18
-            ).pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
-        
-        # THIRD ROW - Export & Save Tools
-        row3_frame = ttk.Frame(tools_frame)
-        row3_frame.pack(fill=tk.X)
-        
-        tools_row3 = [
-            ("💾 Save Project", self._save_lyrics, "success.TButton"),
-            ("📤 Export Audio", self._export_with_beat, "primary.TButton"),
-            ("🔄 Version Control", self._save_lyric_version, "info.TButton"),
-            ("🌐 Share Online", self._share_lyrics_online, "warning.TButton")
-        ]
-        
-        for text, command, style in tools_row3:
-            ttk.Button(
-                row3_frame,
-                text=text,
-                command=command,
-                style=style,
-                width=18
-            ).pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
-        
-        # Style Selection & Configuration
-        config_frame = ttk.LabelFrame(main_frame, text="🎨 Style & AI Configuration", padding=10)
-        config_frame.pack(fill=tk.X, pady=(0, 15))
-        
-        # Top row - Style and mood
-        config_top_frame = ttk.Frame(config_frame)
-        config_top_frame.pack(fill=tk.X, pady=(0, 10))
-        
-        # Style selection
-        ttk.Label(config_top_frame, text="Style:", font=("Segoe UI", 10, "bold")).pack(side=tk.LEFT, padx=(0, 5))
-        self.lyric_style = tk.StringVar(value="Boom Bap")
-        style_combo = ttk.Combobox(
-            config_top_frame,
-            textvariable=self.lyric_style,
-            values=list(LYRIC_STYLES.keys()),
-            width=15,
-            state="readonly"
-        )
-        style_combo.pack(side=tk.LEFT, padx=(0, 20))
-        style_combo.bind("<<ComboboxSelected>>", self._on_style_change)
-        
-        # Mood selection
-        ttk.Label(config_top_frame, text="Mood:", font=("Segoe UI", 10, "bold")).pack(side=tk.LEFT, padx=(0, 5))
-        self.lyric_mood = tk.StringVar(value="Confident")
-        mood_combo = ttk.Combobox(
-            config_top_frame,
-            textvariable=self.lyric_mood,
-            values=["Confident", "Aggressive", "Chill", "Emotional", "Party", "Introspective", "Motivational"],
-            width=12,
-            state="readonly"
-        )
-        mood_combo.pack(side=tk.LEFT, padx=(0, 20))
-        
-        # Complexity slider
-        ttk.Label(config_top_frame, text="Complexity:", font=("Segoe UI", 10, "bold")).pack(side=tk.LEFT, padx=(0, 5))
-        self.complexity_var = tk.IntVar(value=5)
-        complexity_scale = ttk.Scale(
-            config_top_frame,
-            from_=1, to=10,
-            variable=self.complexity_var,
-            length=100,
-            orient=tk.HORIZONTAL
-        )
-        complexity_scale.pack(side=tk.LEFT, padx=(0, 5))
-        self.complexity_label = ttk.Label(config_top_frame, text="5")
-        self.complexity_label.pack(side=tk.LEFT)
-        complexity_scale.configure(command=lambda v: self.complexity_label.config(text=str(int(float(v)))))
-        
-        # Style description
-        self.style_description = ttk.Label(
-            config_frame,
-            text="Classic hip-hop with strong emphasis on bars and wordplay",
-            font=("Segoe UI", 9, "italic")
-        )
-        self.style_description.pack(anchor=tk.W)
-        
-        # Main composition area - Enhanced 3-panel layout
-        composition_frame = ttk.Frame(main_frame)
-        composition_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # Left panel - Main lyric editor (60% width)
-        left_frame = ttk.LabelFrame(composition_frame, text="✍️ Lyric Composition Studio", padding=10)
-        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
-        
-        # Lyric editor toolbar
-        editor_toolbar = ttk.Frame(left_frame)
-        editor_toolbar.pack(fill=tk.X, pady=(0, 5))
-        
-        ttk.Button(
-            editor_toolbar,
-            text="🎯 Auto-Complete",
-            command=self._auto_complete_line,
-            width=15
-        ).pack(side=tk.LEFT, padx=(0, 5))
-        
-        ttk.Button(
-            editor_toolbar,
-            text="🔄 Rewrite Bar",
-            command=self._rewrite_current_bar,
-            width=15
-        ).pack(side=tk.LEFT, padx=(0, 5))
-        
-        # Word count display
-        self.word_count_var = tk.StringVar(value="Words: 0 | Lines: 0")
-        ttk.Label(
-            editor_toolbar,
-            textvariable=self.word_count_var,
-            font=("Segoe UI", 8)
-        ).pack(side=tk.RIGHT)
-        
-        # Main lyric editor
-        self.lyric_editor = TtkScrolledText(
-            left_frame,
-            wrap=tk.WORD,
-            font=("Consolas" if platform.system() == "Windows" else "Monaco", self.font_size)
-        )
-        self.lyric_editor.pack(fill=tk.BOTH, expand=True)
-        self.lyric_editor.bind("<KeyRelease>", self._on_lyric_text_change)
-        
-        # Middle panel - AI Assistant (25% width)
-        middle_frame = ttk.LabelFrame(composition_frame, text="🤖 AI Writing Assistant", padding=10)
-        middle_frame.pack(side=tk.LEFT, fill=tk.Y, padx=5)
-        
-        # Rhyme suggestions
-        ttk.Label(middle_frame, text="Rhyme Suggestions:", font=("Segoe UI", 9, "bold")).pack(anchor=tk.W)
-        self.rhyme_suggestions = tk.Listbox(middle_frame, height=6, width=20, font=("Segoe UI", 8))
-        self.rhyme_suggestions.pack(fill=tk.X, pady=(0, 10))
-        self.rhyme_suggestions.bind("<Double-Button-1>", self._insert_rhyme)
-        
-        # Synonym suggestions
-        ttk.Label(middle_frame, text="Smart Synonyms:", font=("Segoe UI", 9, "bold")).pack(anchor=tk.W)
-        self.synonym_suggestions = tk.Listbox(middle_frame, height=5, width=20, font=("Segoe UI", 8))
-        self.synonym_suggestions.pack(fill=tk.X, pady=(0, 10))
-        
-        # AI prompt area
-        ttk.Label(middle_frame, text="AI Prompt:", font=("Segoe UI", 9, "bold")).pack(anchor=tk.W)
-        self.lyric_prompt = TtkScrolledText(
-            middle_frame,
-            wrap=tk.WORD,
-            height=5,
-            width=20,
-            font=("Segoe UI", 9)
-        )
-        self.lyric_prompt.pack(fill=tk.X, pady=(0, 5))
-        
-        ttk.Button(
-            middle_frame,
-            text="✨ Generate",
-            command=self._generate_style_specific_lyrics,
-            style="primary.TButton"
-        ).pack(fill=tk.X, pady=(0, 10))
-        
-        # Right panel - Style tips and history (15% width)
-        right_frame = ttk.LabelFrame(composition_frame, text="📚 Style Guide & History", padding=10)
-        right_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=(5, 0))
-        
-        # Style tips
-        ttk.Label(right_frame, text="Style Tips:", font=("Segoe UI", 9, "bold")).pack(anchor=tk.W)
-        self.style_tips = tk.Text(
-            right_frame, 
-            height=8, 
-            width=25, 
-            font=("Segoe UI", 8), 
-            wrap=tk.WORD,
-            state=tk.DISABLED
-        )
-        self.style_tips.pack(fill=tk.X, pady=(0, 10))
-        
-        # Recent versions
-        ttk.Label(right_frame, text="Recent Versions:", font=("Segoe UI", 9, "bold")).pack(anchor=tk.W)
-        self.version_history = tk.Listbox(right_frame, height=6, width=25, font=("Segoe UI", 8))
-        self.version_history.pack(fill=tk.X)
-        self.version_history.bind("<Double-Button-1>", self._load_version)
-        
-        # Initialize with default style
-        self._update_style_tips()
+        """Set up the Lyric Lab tab with full functionality"""
+        if hasattr(self, 'lyric_lab_integration'):
+            self.lyric_lab_integration.setup_lyric_lab_tab(self.lyric_tab)
+            return
+        else:
+            # Fallback UI presented in its own modal dialog
+            dialog = tk.Toplevel(self.root)
+            dialog.title("🔐 Connect Lyric Lab")
+            dialog.geometry("600x500")
+            dialog.transient(self.root)
+            dialog.grab_set()
 
-    # ============================================================================
-    # API KEY MANAGEMENT
-    # ============================================================================
+            # Build UI inside the dialog
+            main_frame = ttk.Frame(dialog, padding=20)
+            main_frame.pack(fill=tk.BOTH, expand=True)
 
-    def prompt_for_api_key(self):
-        """Enhanced API key prompt with better UX."""
-        dialog = tk.Toplevel(self.root)
-        dialog.title("CodedSwitch - API Key Setup")
-        dialog.geometry("600x500")
-        dialog.transient(self.root)
-        dialog.grab_set()
-        dialog.resizable(False, False)
-        
-        # Center the dialog
-        dialog.update_idletasks()
-        x = (dialog.winfo_screenwidth() // 2) - (300)
-        y = (dialog.winfo_screenheight() // 2) - (250)
-        dialog.geometry(f"600x500+{x}+{y}")
-        
-        # Main frame with better padding
-        main_frame = ttk.Frame(dialog, padding=30)
-        main_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # Header with icon
-        header_frame = ttk.Frame(main_frame)
-        header_frame.pack(fill=tk.X, pady=(0, 20))
-        
-        ttk.Label(
-            header_frame,
-            text="🔑 API Key Required",
-            font=("Segoe UI", 16, "bold")
-        ).pack()
-        
-        ttk.Label(
-            header_frame,
-            text="CodedSwitch needs a Gemini API key to function",
-            font=("Segoe UI", 10)
-        ).pack(pady=(5, 0))
-        
-        # Instructions with better formatting
-        instructions_frame = ttk.LabelFrame(main_frame, text="📋 How to Get Your API Key", padding=15)
-        instructions_frame.pack(fill=tk.X, pady=(0, 20))
-        
-        instructions = """1. Visit: https://makersuite.google.com/app/apikey
-2. Sign in with your Google account
-3. Click "Create API Key" 
-4. Copy the generated key
-5. Paste it below and click Save
+            ttk.Label(main_frame, text="🎤 Lyric Lab - Getting Started", 
+                      font=('Arial', 14)).pack(pady=(0, 10))
 
-🆓 The API is free with generous limits!
-🔒 Your key is stored securely on your computer."""
+            instructions_frame = ttk.LabelFrame(
+                main_frame,
+                text="How to enable Lyric Lab",
+                padding=10
+            )
+            instructions_frame.pack(fill=tk.X, pady=(0, 20))
+            instructions = (
+                "2. Sign in with your Google account\n"
+                "3. Click \"Create API Key\"\n"
+                "4. Copy the generated key\n"
+                "5. Paste it below and click Save\n\n"
+                "🆓 The API is free with generous limits!\n"
+                "🔒 Your key is stored securely on your computer."
+            )
         
         ttk.Label(
             instructions_frame,
@@ -1811,7 +1799,7 @@ Demo Mode Notes:
                     "💡 Your key is securely stored for future sessions."
                 )
                 
-                logger.info("API key successfully configured")
+                root_logger.info("API key successfully configured")
             else:
                 messagebox.showerror(
                     "Connection Failed", 
@@ -1823,7 +1811,7 @@ Demo Mode Notes:
                 )
                 
         except Exception as e:
-            logger.error(f"API key validation error: {e}")
+            root_logger.error(f"API key validation error: {e}")
             messagebox.showerror(
                 "Setup Error", 
                 f"Failed to configure API key.\n\n"
@@ -2225,7 +2213,7 @@ Demo Mode Notes:
                 pass  # Ignore cursor position errors
                 
         except Exception as e:
-            logger.warning(f"Error in lyric text change handler: {e}")
+            root_logger.warning(f"Error in lyric text change handler: {e}")
 
     def _get_rhyme_suggestions(self, word):
         """Get AI-powered rhyme suggestions with caching."""
@@ -2255,7 +2243,7 @@ Demo Mode Notes:
                 self.rhyme_suggestions.insert(tk.END, rhyme)
                 
         except Exception as e:
-            logger.warning(f"Error getting rhyme suggestions: {e}")
+            root_logger.warning(f"Error getting rhyme suggestions: {e}")
 
     def _get_synonym_suggestions(self, word):
         """Get contextual synonym suggestions."""
@@ -2273,7 +2261,7 @@ Demo Mode Notes:
                 self.synonym_suggestions.insert(tk.END, synonym)
                 
         except Exception as e:
-            logger.warning(f"Error getting synonym suggestions: {e}")
+            root_logger.warning(f"Error getting synonym suggestions: {e}")
 
     def _insert_rhyme(self, event):
         """Insert selected rhyme into lyric editor."""
@@ -2284,7 +2272,7 @@ Demo Mode Notes:
                 self.lyric_editor.insert(tk.INSERT, rhyme + " ")
                 self.lyric_editor.focus()
         except Exception as e:
-            logger.warning(f"Error inserting rhyme: {e}")
+            root_logger.warning(f"Error inserting rhyme: {e}")
 
     @ErrorHandler.handle_errors("Lyric Flow Analysis")
     def _analyze_lyric_flow(self):
@@ -2452,7 +2440,7 @@ Be specific and match the lyrical content perfectly."""
             
         except Exception as e:
             messagebox.showerror("Beat Analysis Error", f"Failed to analyze for beat: {str(e)}")
-            logger.error(f"Beat suggestion error: {str(e)}", exc_info=True)
+            root_logger.error(f"Beat suggestion error: {str(e)}", exc_info=True)
 
     def _parse_beat_response(self, response: str) -> dict:
         """Safely parse the JSON response for beat data."""
@@ -2464,13 +2452,13 @@ Be specific and match the lyrical content perfectly."""
             beat_data = json.loads(response)
             # Basic validation to ensure we have the keys we need
             if "bpm" in beat_data and "kick_pattern" in beat_data:
-                logger.info("Successfully parsed beat data from AI response.")
+                root_logger.info("Successfully parsed beat data from AI response.")
                 return beat_data
             else:
-                logger.warning("Parsed JSON is missing required beat keys.")
+                root_logger.warning("Parsed JSON is missing required beat keys.")
                 return {}
         except (json.JSONDecodeError, AttributeError, Exception) as e:
-            logger.error(f"Failed to parse beat JSON response: {e}")
+            root_logger.error(f"Failed to parse beat JSON response: {e}")
             messagebox.showerror("Beat Analysis Error", "The AI returned an invalid format for the beat data. Please try again.")
             return {}
 
@@ -2994,7 +2982,7 @@ Be specific and match the lyrical content perfectly."""
             beat_window.status_label.config(text="🎵 Beat stopped. Ready to play again!")
             
         except Exception as e:
-            logger.warning(f"Failed to stop beat: {e}")
+            root_logger.warning(f"Failed to stop beat: {e}")
 
     def _show_beat_error(self, beat_window, error_msg):
         """Show beat error with recovery options."""
@@ -3430,6 +3418,7 @@ Would you like to export for sharing?"""
 import sqlite3
 import subprocess
 from flask import Flask, request, render_template_string
+from lyric_lab_integration import LyricLabIntegration
 
 app = Flask(__name__)
 
@@ -3640,10 +3629,10 @@ if __name__ == '__main__':
             if hasattr(self, 'executor'):
                 self.executor.shutdown(wait=False)
             
-            logger.info("Application closing - cleanup completed")
+            root_logger.info("Application closing - cleanup completed")
             
         except Exception as e:
-            logger.error(f"Error during cleanup: {e}")
+            root_logger.error(f"Error during cleanup: {e}")
         finally:
             self.root.destroy()
 
@@ -3981,7 +3970,7 @@ if __name__ == '__main__':
                 
                 widget.configure(font=(font_family, self.font_size))
             except Exception as e:
-                logger.warning(f"Failed to update font for widget: {e}")
+                root_logger.warning(f"Failed to update font for widget: {e}")
         
         if delta != 0:
             self.status_var.set(f"🔤 Font size: {self.font_size}pt")
@@ -4000,7 +3989,7 @@ if __name__ == '__main__':
                 self.config_manager.set("theme", theme_name)
                 self.config_manager.save_config()
         except Exception as e:
-            logger.error(f"Failed to change theme: {e}")
+            root_logger.error(f"Failed to change theme: {e}")
             messagebox.showerror("Theme Error", f"Failed to apply theme: {str(e)}")
 
     def _select_all(self):
@@ -4014,7 +4003,7 @@ if __name__ == '__main__':
             elif hasattr(widget, 'select_range'):  # Entry widget
                 widget.select_range(0, tk.END)
         except Exception as e:
-            logger.warning(f"Select all failed: {e}")
+            root_logger.warning(f"Select all failed: {e}")
 
     def _load_demo_code(self):
         """Load enhanced demo code with multiple examples."""
@@ -4126,12 +4115,12 @@ Type your message below or try one of the example prompts.
             text_widget.see(tk.END)
             
         except Exception as e:
-            logger.error(f"Error adding welcome message: {e}")
+            root_logger.error(f"Error adding welcome message: {e}")
             try:
                 if 'text_widget' in locals():
                     text_widget.configure(state='disabled')
             except Exception as e:
-                logger.error(f"Error resetting widget state: {e}")
+                root_logger.error(f"Error resetting widget state: {e}")
                 
     def _export_chat(self):
         """Export the current chat conversation to a text file.
@@ -4169,7 +4158,7 @@ Type your message below or try one of the example prompts.
                 except Exception as e:
                     messagebox.showerror("Export Error", f"Failed to export: {str(e)}")
         except Exception as e:
-            logger.error(f"Error exporting chat history: {e}")
+            root_logger.error(f"Error exporting chat history: {e}")
             messagebox.showerror("Error", f"Failed to access chat content: {str(e)}")
 
     def _export_lyric_project(self):
@@ -4271,7 +4260,7 @@ What would you like to work on today? 🚀"""
                 # Disable editing
                 text_widget.configure(state='disabled')
         except Exception as e:
-            logger.error(f"Error in _add_welcome_message: {str(e)}")
+            root_logger.error(f"Error in _add_welcome_message: {str(e)}")
             # Try to recover by just disabling the widget
             try:
                 text_widget.configure(state='disabled')
@@ -4443,7 +4432,7 @@ Click any example or type your own question! 🎯"""
             
         except Exception as e:
             error_msg = f"Failed to export chat: {str(e)}"
-            logger.error(error_msg, exc_info=True)
+            root_logger.error(error_msg, exc_info=True)
             messagebox.showerror("Export Error", error_msg)
             self.status_var.set("❌ Failed to export chat")
 
@@ -4480,7 +4469,7 @@ Click any example or type your own question! 🎯"""
                 )
                 
             except Exception as e:
-                logger.error(f"Model change failed: {e}")
+                root_logger.error(f"Model change failed: {e}")
                 messagebox.showerror("Model Change Error", f"Failed to switch model: {str(e)}")
                 # Revert to old model
                 self.model_var.set(self.gemini_model)
@@ -6915,14 +6904,14 @@ Provide the same JSON format as before with updated patterns."""
     def run(self):
         """Run the enhanced CodedSwitch application."""
         try:
-            logger.info("🎤 Starting CodedSwitch Enhanced Edition...")
+            root_logger.info("🎤 Starting CodedSwitch Enhanced Edition...")
             self.root.mainloop()
         except KeyboardInterrupt:
-            logger.info("Application interrupted by user")
+            root_logger.info("Application interrupted by user")
         except Exception as e:
-            logger.error(f"Application error: {e}", exc_info=True)
+            root_logger.error(f"Application error: {e}", exc_info=True)
         finally:
-            logger.info("Application shutdown completed")
+            root_logger.info("Application shutdown completed")
 
 
 def main():
@@ -6977,20 +6966,20 @@ Features:
         # Disable audio if requested
         if args.no_audio:
             app.resource_manager.audio_initialized = False
-            logger.info("🔇 Audio system disabled by user request")
+            root_logger.info("🔇 Audio system disabled by user request")
         
         # Enter demo mode if requested
         if args.demo_mode:
             app._setup_demo_mode()
             app.status_var.set("🎮 Demo Mode Active - Explore all features!")
-            logger.info("🎮 Demo mode activated")
+            root_logger.info("🎮 Demo mode activated")
         
         print("✅ CodedSwitch initialized successfully!")
         audio_status = "✓" if not args.no_audio else "✗"
         print(f"🎯 Features: Translation ✓ Security ✓ Chat ✓ Lyric Lab ✓ Audio {audio_status}")
         print("🎵 Ready to code and create! Let's switch it up!")
         
-        logger.info("🎤 CodedSwitch Enhanced Edition ready!")
+        root_logger.info("🎤 CodedSwitch Enhanced Edition ready!")
         
         app.run()
         
@@ -6999,7 +6988,7 @@ Features:
         print("📦 Install required packages: pip install -r requirements.txt")
         return 1
     except Exception as e:
-        logger.error(f"Failed to start application: {e}", exc_info=True)
+        root_logger.error(f"Failed to start application: {e}", exc_info=True)
         print(f"❌ Failed to start CodedSwitch: {e}")
         print("🔧 Try running with --debug for more information")
         return 1

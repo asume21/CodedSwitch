@@ -10,7 +10,7 @@ import queue
 import json
 import os
 from dataclasses import dataclass
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any, Union
 from enum import Enum
 import wave
 import struct
@@ -279,8 +279,34 @@ class Sequencer:
         """Add a pattern to the sequencer."""
         self.patterns[name] = pattern
     
-    def generate_drum_pattern(self, pattern_type: str = 'basic') -> Pattern:
-        """Generate common drum patterns."""
+    def generate_drum_pattern(self, pattern_source: Union[str, Dict[str, Any]] = 'basic') -> Pattern:
+        """Generate drum patterns.
+
+        pattern_source can be:
+        1. A string key referring to predefined templates (backward compatible).
+        2. A dict containing drum hit arrays (e.g. {'kick':[0,2], 'snare':[1,3], 'hihat':[0,0.5,...]}) and optional 'swing' ratio (0-1)
+           produced by the AI beat suggestion system.
+        """
+                # If an algorithmic configuration dict is supplied, build pattern dynamically
+        if isinstance(pattern_source, dict):
+            swing = float(pattern_source.get('swing', 0.0))
+            notes: List[Note] = []
+            for drum, beats in pattern_source.items():
+                if drum == 'swing':
+                    continue
+                pitch = 60 if drum == 'kick' else 62 if drum == 'snare' else 64
+                for beat in beats:
+                    beat_pos = float(beat)
+                    # Apply simple swing to off-beats (odd eighth notes)
+                    if swing > 0 and int(beat_pos * 2) % 2 == 1:
+                        beat_pos += swing * 0.25  # shift by up to a sixteenth-note
+                    velocity = 1.0 if beat_pos % 1 == 0 else 0.8
+                    notes.append(Note(pitch, velocity, 0.1, beat_pos))
+            return Pattern(notes=notes, length=4.0, channel='drums')
+
+        # ---------------------------------------------------------------------
+        # Predefined templates (legacy)
+        pattern_type = pattern_source
         patterns = {
             'basic': [
                 ('kick', [0, 2]),
@@ -309,7 +335,7 @@ class Sequencer:
                     start_time=beat
                 ))
         
-        return Pattern(notes=notes, length=4.0, channel='drums')
+                return Pattern(notes=notes, length=4.0, channel='drums')
 
 # ============================================================================
 # MELODY GENERATOR
@@ -403,6 +429,13 @@ class BeatStudioEngine:
     
     def analyze_lyrics_mood(self, lyrics: str) -> Dict[str, Any]:
         """Analyze lyrics to determine musical parameters."""
+        # Try advanced LyricAnalyzer if present for richer analysis
+        try:
+            from lyric_analyzer import LyricAnalyzer  # type: ignore
+            return LyricAnalyzer().analyze(lyrics)
+        except Exception:
+            # Fallback to keyword heuristic below
+            pass
         # Simple mood analysis based on keywords
         mood_keywords = {
             'happy': ['happy', 'joy', 'love', 'bright', 'smile', 'dance'],
@@ -457,11 +490,40 @@ class BeatStudioEngine:
         
         return params.get(dominant_mood, params['neutral'])
     
-    def generate_beat_from_lyrics(self, lyrics: str, duration: float = 8.0) -> np.ndarray:
+    def generate_beat_from_lyrics(self, lyrics: str, duration: float = 8.0, beat_params: Optional[Dict[str, Any]] = None) -> np.ndarray:
         """Generate a complete beat based on lyrics analysis."""
         try:
             # Analyze lyrics
             params = self.analyze_lyrics_mood(lyrics)
+        except Exception as e:
+            logger.error(f"Error analyzing lyrics: {e}")
+            # Fallback to neutral parameters on analysis error
+            params = {
+                'tempo': 120,
+                'scale': Scale.MAJOR,
+                'drum_pattern': 'basic',
+                'synth_type': 'sine'
+            }
+
+        # Ensure beat_params is a dict for easier handling
+        if beat_params is None:
+            beat_params = {}
+
+        # Override with explicit beat parameters coming from AI or UI
+        if beat_params is not None:
+            # Tempo / BPM
+            if 'recommended_bpm' in beat_params or 'tempo' in beat_params:
+                params['tempo'] = int(beat_params.get('recommended_bpm', beat_params.get('tempo', params['tempo'])))
+            # Scale override
+            if 'scale' in beat_params:
+                _sv = beat_params['scale']
+                if isinstance(_sv, Scale):
+                    params['scale'] = _sv
+                elif isinstance(_sv, str) and _sv.upper() in Scale.__members__:
+                    params['scale'] = Scale[_sv.upper()]
+            # Drum pattern (dict or str)
+            if 'drum_pattern' in beat_params or 'drum_pattern_type' in beat_params:
+                params['drum_pattern'] = beat_params.get('drum_pattern', beat_params.get('drum_pattern_type'))
             
             # Update components with parameters
             self.sequencer.tempo = params['tempo']
@@ -497,6 +559,7 @@ class BeatStudioEngine:
             total_samples = int(AudioConstants.SAMPLE_RATE * duration)
         
             # Initialize tracks
+            chord_track = np.zeros(total_samples)
             drum_track = np.zeros(total_samples)
             melody_track = np.zeros(total_samples)
             bass_track = np.zeros(total_samples)
@@ -541,35 +604,147 @@ class BeatStudioEngine:
                     frequency, note.duration, 'sine', note.velocity
                 )
                 end_sample = min(start_sample + len(sound), total_samples)
-                sound_slice = sound[:end_sample - start_sample]
-                target_len = end_sample - start_sample
-                if len(sound_slice) < target_len:
-                    sound_slice = np.pad(sound_slice, (0, target_len - len(sound_slice)), mode='constant')
-                bass_track[start_sample:end_sample] += sound_slice
         
+        # Render chord progression (simple 4-chord loop) for harmonic glue
+        if params['scale'] == Scale.MAJOR:
+            prog_degrees = [0, 7, 9, 5]  # I-V-vi-IV
+            chord_type = Chord.MAJOR
+            root_base = 60  # C4
+        else:
+            prog_degrees = [0, 5, 3, 7]  # i-VI-III-VII
+            chord_type = Chord.MINOR
+            root_base = 57  # A3
+        chords_needed = int((duration / beat_duration) / 2)  # 2-beat per chord
+        for idx in range(chords_needed):
+            degree = prog_degrees[idx % len(prog_degrees)]
+            start_beats = idx * 2
+            root_midi = root_base + degree
+            root_freq = 440 * (2 ** ((root_midi - 69) / 12))
+            chord_audio = self.synthesizer.generate_chord(
+                root_freq,
+                chord_type,
+                2 * beat_duration,
+                params['synth_type']
+            )
+            start_sample = int(start_beats * samples_per_beat)
+            end_sample = min(start_sample + len(chord_audio), total_samples)
+            slice_len = end_sample - start_sample
+            chord_track[start_sample:end_sample] += chord_audio[:slice_len]
+            
+        # Mix tracks
+        final_mix = (
+            drum_track * 0.8 +
+            melody_track * 0.6 +
+            chord_track * 0.5 +
+            bass_track * 0.7
+        ) * AudioConstants.MASTER_VOLUME
         
+        # Normalize and prevent clipping
+        max_val = np.max(np.abs(final_mix))
+        if max_val > 1.0:
+            final_mix /= max_val
         
+        return final_mix
+    
+    def generate_full_song_from_lyrics(self, lyrics: str, length_seconds: float = 180.0) -> np.ndarray:
+        """Generate a complete song (≈ ``length_seconds``) using repeating sections.
 
-        
-        
-            # Mix tracks
-            final_mix = (
-                drum_track * 0.8 +
-                melody_track * 0.6 +
-                bass_track * 0.7
-            ) * AudioConstants.MASTER_VOLUME
-        
-            # Normalize and prevent clipping
-            max_val = np.max(np.abs(final_mix))
-            if max_val > 1.0:
-                final_mix /= max_val
-        
-            return final_mix
-        
-        except Exception as e:
-            logger.error(f"Error generating beat: {e}")
-            # Return silence on error
-            return np.zeros(int(AudioConstants.SAMPLE_RATE * duration))
+        The method re-uses ``generate_beat_from_lyrics`` to create individual
+        sections (intro, verses, choruses, bridge, outro) and concatenates them
+        until the requested duration is reached.  A simple fade-in/out is
+        applied to intro/outro and the entire track is normalised.
+        """
+        try:
+            # Derive base musical parameters from the lyrics (tempo, scale, etc.).
+            base_params = self.analyze_lyrics_mood(lyrics)
+            tempo = base_params["tempo"]
+
+            bar_seconds = 60.0 / tempo * 4  # 4/4 – four beats per bar
+
+            # Section templates – bars per section
+            section_bars = {
+                "intro": 4,
+                "verse": 16,
+                "chorus": 8,
+                "bridge": 8,
+                "outro": 4,
+            }
+
+            structure = [
+                "intro",
+                "verse",
+                "chorus",
+                "verse",
+                "chorus",
+                "bridge",
+                "chorus",
+                "outro",
+            ]
+
+            total_seconds = 0.0
+            sections: List[np.ndarray] = []
+
+            def _fade(audio: np.ndarray, fade_in: bool = False, seconds: float = 1.0) -> np.ndarray:
+                """Apply linear fade-in or fade-out."""
+                samples = int(seconds * AudioConstants.SAMPLE_RATE)
+                if samples == 0:
+                    return audio
+                envelope = (
+                    np.linspace(0.0, 1.0, samples) if fade_in else np.linspace(1.0, 0.0, samples)
+                )
+                if audio.ndim == 2:
+                    envelope = envelope[:, None]
+                audio[:samples] *= envelope if fade_in else audio[-samples:] * 1  # type: ignore[arg-type]
+                if not fade_in:
+                    audio[-samples:] *= envelope  # fade-out
+                return audio
+
+            # Build song until desired length is reached
+            idx = 0
+            while total_seconds < length_seconds:
+                section_type = structure[idx % len(structure)]
+                idx += 1
+
+                sec_duration = section_bars.get(section_type, 8) * bar_seconds
+
+                # Prevent overshoot by trimming last section length if needed
+                if total_seconds + sec_duration > length_seconds + 1.0:
+                    sec_duration = max(2 * bar_seconds, length_seconds - total_seconds)
+
+                section_audio = self.generate_beat_from_lyrics(lyrics, duration=sec_duration)
+
+                # Simple variation: slightly tweak synth type for chorus for brightness
+                # (Skip heavy param hacking – keep runtime reasonable.)
+                # Add fades on intro / outro for polish
+                if section_type == "intro":
+                    section_audio = _fade(section_audio, fade_in=True)
+                elif section_type == "outro":
+                    section_audio = _fade(section_audio, fade_in=False)
+
+                sections.append(section_audio)
+                total_seconds += sec_duration
+
+            # Concatenate
+            full_song = np.concatenate(sections, axis=0)
+
+            # Trim / pad to exact length
+            target_samples = int(length_seconds * AudioConstants.SAMPLE_RATE)
+            if full_song.shape[0] > target_samples:
+                full_song = full_song[:target_samples]
+            elif full_song.shape[0] < target_samples:
+                pad = target_samples - full_song.shape[0]
+                full_song = np.pad(full_song, ((0, pad), (0, 0)) if full_song.ndim == 2 else (0, pad))
+
+            # Normalise
+            peak = np.max(np.abs(full_song))
+            if peak > 0:
+                full_song = full_song / peak * AudioConstants.MASTER_VOLUME
+
+            return full_song
+        except Exception as e:  # pragma: no cover – best-effort
+            logger.error("Full song generation failed: %s", e)
+            # Return silence fallback of requested length
+            return np.zeros(int(length_seconds * AudioConstants.SAMPLE_RATE))        
     
     def preview_drum(self, instrument: str, velocity: float = 1.0):
         """Play a short one-shot drum sound for UI preview."""
@@ -595,31 +770,52 @@ class BeatStudioEngine:
             logger.error(f"Failed drum preview: {e}")
 
     def play_audio(self, audio_data: np.ndarray):
-        """Play audio using pygame mixer."""
+        """Play audio using pygame mixer.
+
+        This method has been hardened to avoid silent failures that can occur
+        if the underlying ``numpy`` array is non-contiguous or the mixer/
+        channel volume is muted. Additional debug logging helps diagnose
+        potential problems with the buffer in the field.
+        """
         try:
-            # Convert to 16-bit integers
+            if audio_data is None or audio_data.size == 0:
+                logger.warning("play_audio called with empty audio buffer — skipping")
+                return
+
+            # Convert to 16-bit signed integers (little-endian)
             audio_data = np.clip(audio_data * 32767, -32768, 32767).astype(np.int16)
-            
-            # Create stereo if mono
-            if len(audio_data.shape) == 1:
+
+            # Ensure stereo
+            if audio_data.ndim == 1:
                 audio_data = np.column_stack((audio_data, audio_data))
-            
-            # Convert to pygame sound
+
+            # Ensure contiguous memory for pygame
+            audio_data = np.ascontiguousarray(audio_data)
+
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "play_audio: shape=%s dtype=%s min=%s max=%s",  # noqa: G003
+                    audio_data.shape,
+                    audio_data.dtype,
+                    audio_data.min(),
+                    audio_data.max(),
+                )
+
             sound = pygame.sndarray.make_sound(audio_data)
-            
-            # Play
+            sound.set_volume(1.0)
+
             self.is_playing = True
-            sound.play()
-            
-            # Wait for playback to complete
+            channel = sound.play()
+            if channel is not None:
+                channel.set_volume(1.0)
+
             while pygame.mixer.get_busy():
-                pygame.time.Clock().tick(10)
-            
+                pygame.time.Clock().tick(30)
+
             self.is_playing = False
-        except Exception as e:
-            logger.error(f"Error playing audio: {e}")
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.error("Error playing audio: %s", exc, exc_info=True)
             self.is_playing = False
-    
     def save_audio(self, audio_data: np.ndarray, filename: str):
         """Save audio to WAV file."""
         try:

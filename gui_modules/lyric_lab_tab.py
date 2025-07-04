@@ -30,7 +30,12 @@ class LyricLabTab:
         self.LYRIC_STYLES = {
             "CodedSwitch": "Tech-focused rap with coding metaphors and programming terminology",
             "Hip-Hop": "Classic hip-hop style with strong beats and storytelling elements",
-            "Trap": "Modern trap style with heavy bass and triplet flows",
+            "Trap": "Modern trap style with heavy 808s, triplet hi-hats and melodic hooks",
+            "Drill": "Aggressive sliding 808s and staccato flows (Chicago/UK flair)",
+            "Boom Bap": "90s sample chops, punchy snares, emphasis on lyricism",
+            "Melodic Rap": "Sing-rap hybrid with autotuned melodies and emotional themes",
+            "UK Drill": "Dark minor melodies, syncopated hats, British slang",
+            "Experimental": "Avant-garde structures and unconventional sound design",
             "Pop": "Catchy pop melodies with mainstream appeal and memorable hooks",
             "R&B": "Smooth R&B with emotional depth and melodic flow",
             "Rock": "Rock anthems with powerful lyrics and driving energy"
@@ -290,6 +295,42 @@ Be detailed and constructive."""
     
         # Enhanced analysis simulation
         def simulate_analysis():
+            """Run beat suggestions via AI if available, otherwise fallback."""
+            summary = ""
+            bpm = 120
+            if self.ai_interface:
+                try:
+                    prompt = (
+                        "You are a professional hip-hop producer. "
+                        "Given the following rap lyrics, recommend an ideal beat in JSON with keys: "
+                        "recommended_bpm (int), energy_level (Low/Medium/High), instrumentation (string), "
+                        "drum_pattern (string). Return ONLY JSON.\n\nLyrics:\n" + lyrics)
+                    raw = self.ai_interface.chat_response(prompt)
+                    import json as _json
+                    data = _json.loads(raw.strip())
+                    bpm = data.get("recommended_bpm", 120)
+                    summary = (
+                        f"Style detected: {self.lyric_style.get()}\n"
+                        f"Recommended BPM: {bpm}\n"
+                        f"Energy level: {data.get('energy_level', 'Medium')}\n"
+                        f"Instrumentation: {data.get('instrumentation', '?')}\n"
+                        f"Drum pattern: {data.get('drum_pattern', '?')}\n\n")
+                except Exception as e:
+                    logger.warning("AI beat suggestion failed: %s", e)
+            if not summary:
+                summary = (
+                    f"Style detected: {self.lyric_style.get()}\n"
+                    f"Recommended BPM: {bpm}\nEnergy level: High\n\n")
+            steps = [
+                (1000, "🎵 Analyzing lyrics...", ""),
+                (2000, "🥁 Generating beat suggestions...", summary),
+                (3000, "✅ Beat analysis complete!", "Ready to open Beat Studio.\n"),
+            ]
+            for delay, status, text in steps:
+                analysis_window.after(delay, lambda s=status: status_var.set(s))
+                analysis_window.after(delay, lambda t=text: analysis_text.insert(tk.END, t))
+            analysis_window.after(3000, progress.stop)
+            analysis_window.after(3000, lambda: generate_btn.configure(state='normal'))
             steps = [
                 (1000, "🎵 Determining musical style...", f"Analyzing lyrics for musical characteristics...\n\n"),
                 (2000, "🥁 Generating beat patterns...", f"Style detected: {self.lyric_style.get()}\nRecommended BPM: 120\nEnergy level: High\n\n"),
@@ -588,3 +629,17 @@ Be detailed and constructive."""
         
         ttk.Button(main_frame, text="Close", 
                   command=result_window.destroy).pack()
+
+    # ------------------------------------------------------------------
+    def _run_ai_analysis(self, title: str, prompt: str):
+        """Generic helper to execute an AI chat call in a thread and show the result."""
+        if not self.ai_interface:
+            messagebox.showwarning("AI Not Available", "AI interface not initialized or disabled.")
+            return
+        def _worker():
+            try:
+                response = self.ai_interface.chat_response(prompt)
+                self.parent.root.after(0, lambda: self._show_analysis_result(title, response))
+            except Exception as exc:
+                self.parent.root.after(0, lambda: messagebox.showerror(title + " Error", str(exc)))
+        threading.Thread(target=_worker, daemon=True).start()

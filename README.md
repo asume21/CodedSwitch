@@ -177,6 +177,17 @@ If you encounter issues:
 # 4. Start translating!
 ```
 
+### **Option 1b: Ubuntu / Linux (GPU-ready)**
+```bash
+# 1. Clone repository and cd into it
+# 2. (First time only) create the Python 3.11 virtualenv and install deps
+python3 -m venv venv_py311 && source venv_py311/bin/activate && pip install -r requirements.txt
+# 3. Launch the Linux runner (activates venv automatically next time)
+./run_with_py311.sh
+# 4. Export your Gemini key once (or add to .env)
+export GEMINI_API_KEY=your_key_here
+```
+
 ### **Option 2: Manual Setup**
 ```bash
 # 1. Clone repository

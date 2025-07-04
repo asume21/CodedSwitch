@@ -31,3 +31,32 @@ pywin32>=306;platform_system=="Windows"
 
 # Linux
 # python3-tk;platform_system=="Linux"
+
+# Music Lab and Audio AI dependencies
+# These are required for Music Lab and advanced audio features
+
+torch==2.1.0
+# For Meta's MusicGen and audio generation
+
+audiocraft==1.3.0
+# For MusicGen backend
+
+basic-pitch==0.4.0
+# For pitch detection and MIDI conversion
+
+mido==1.3.3
+# For MIDI file handling
+
+python-rtmidi==1.5.8
+# For MIDI I/O
+
+pygame==2.5.2
+# For audio playback
+
+numpy==1.26.4
+# For numerical operations
+
+Pillow==10.4.0
+# For image processing (if needed by piano roll or other UI)
+
+xformers==0.0.22.post7

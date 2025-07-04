@@ -35,7 +35,8 @@ class AdvancedPatternEditor(ttk.Frame):
             'snare': {'hits': [0]*64, 'velocities': [0.8]*64},
             'hihat': {'hits': [0]*64, 'velocities': [0.6]*64},
             'openhat': {'hits': [0]*64, 'velocities': [0.6]*64},
-            'crash': {'hits': [0]*64, 'velocities': [0.9]*64},
+            'clap': {'hits': [0]*64, 'velocities': [0.8]*64},
+            'bass808': {'hits': [0]*64, 'velocities': [0.8]*64},
             'perc': {'hits': [0]*64, 'velocities': [0.7]*64}
         }
         
@@ -137,9 +138,10 @@ class AdvancedPatternEditor(ttk.Frame):
             ("🥁 Kick", "kick", "#FF5722"),
             ("🥁 Snare", "snare", "#2196F3"),
             ("🎩 Hi-Hat", "hihat", "#4CAF50"),
-            ("🎩 Open", "openhat", "#FFC107"),
-            ("💥 Crash", "crash", "#FF9800"),
-            ("🎵 Perc", "perc", "#9C27B0")
+            ("🎩 Open Hat", "openhat", "#FFC107"),
+            ("👏 Clap", "clap", "#E91E63"),
+            ("🔊 808 Bass", "bass808", "#9C27B0"),
+            ("🥁 Perc Loop", "perc", "#009688")
         ]
         
         self.pattern_buttons = {}

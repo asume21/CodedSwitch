@@ -13,6 +13,12 @@ from scipy import signal
 from scipy.io import wavfile
 import threading
 import queue
+from datetime import datetime
+
+try:
+    import pygame  # type: ignore
+except ImportError:  # pragma: no cover
+    pygame = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +74,7 @@ class AdvancedEffects:
         
         # Tone control (simple low-pass filter)
         if tone < 1.0:
-            b, a = signal.butter(2, tone * 0.5, btype='low')
+            b, a = signal.butter(2, tone * 0.5, btype='low')  # type: ignore[assignment]
             distorted = signal.filtfilt(b, a, distorted)
         
         # Mix dry and wet signals
@@ -422,7 +428,7 @@ class SampleLibrary:
         for category in self.categories:
             os.makedirs(os.path.join(library_path, category), exist_ok=True)
     
-    def load_sample(self, name: str, category: str = None) -> Optional[np.ndarray]:
+    def load_sample(self, name: str, category: Optional[str] = None) -> Optional[np.ndarray]:
         """Load a sample from the library."""
         if name in self.samples:
             return self.samples[name]
@@ -596,7 +602,7 @@ class BeatSuggestionEngine:
             score = sum(1 for keyword in keywords if keyword in lyrics_lower)
             scores[mood] = score
         
-        return max(scores, key=scores.get) if any(scores.values()) else 'chill'
+        return max(scores, key=lambda k: scores[k]) if any(scores.values()) else 'chill'
     
     def suggest_beat_parameters(self, lyrics: str) -> Dict:
         """Suggest beat parameters based on lyrics."""
@@ -645,7 +651,7 @@ class DAWExporter:
                            tempo: int = 120):
         """Export pattern as MIDI file."""
         try:
-            from midiutil import MIDIFile
+            from midiutil import MIDIFile  # type: ignore
             
             midi = MIDIFile(1)
             midi.addTempo(0, 0, tempo)

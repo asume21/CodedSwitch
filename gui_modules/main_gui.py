@@ -139,6 +139,18 @@ class IntegratedTranslatorGUI:
         except Exception as e:
             logger.error(f"Failed to create lyric lab tab: {e}")
             self._create_error_tab(self.lyric_tab, "Lyric Lab", str(e))
+        
+        # Music Lab Tab
+        self.music_lab_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.music_lab_tab, text="🎶 Music Lab")
+        try:
+            import music_lab_tab
+            self.music_lab_component = music_lab_tab.MusicLabTab(self)
+            # Attach frame
+            self.music_lab_component.pack(fill=tk.BOTH, expand=True)
+        except Exception as e:
+            logger.error(f"Failed to create music lab tab: {e}")
+            self._create_error_tab(self.music_lab_tab, "Music Lab", str(e))
     
     def _create_error_tab(self, tab_frame, tab_name, error_msg):
         """Create an error display tab when module fails to load"""

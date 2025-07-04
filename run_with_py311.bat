@@ -19,13 +19,7 @@ if exist ".env" (
     echo 🔑 Loading environment variables from .env file...
     for /f "tokens=1,2 delims==" %%a in (.env) do (
         if "%%a"=="GEMINI_API_KEY" set GEMINI_API_KEY=%%b
-        if "%%a"=="OPENAI_API_KEY" set OPENAI_API_KEY=%%b
-        if "%%a"=="HF_TOKEN" set HF_TOKEN=%%b
-    )
-)
-
-REM Check for API key
-if "%GEMINI_API_KEY%"=="" (
+        if "%%a"=="OPENAI_API_KEY" set OPENAI_API3448989800
     echo ⚠️  Warning: GEMINI_API_KEY not found in environment
     echo You can still use demo mode, but AI features will be limited
 )

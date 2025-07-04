@@ -17,6 +17,7 @@ import json
 from typing import Dict, Optional, Tuple, List, Any
 from dataclasses import dataclass
 import tkinter as tk
+import beat_advisor
 
 # ---------------------------------------------------------------------------
 # SafeDoubleVar – Defensive wrapper around tk.DoubleVar
@@ -114,34 +115,35 @@ except Exception as e:
         BEAT_STUDIO_AVAILABLE = False
     
     # Create minimal fallback classes to satisfy type references
-    @dataclass
-    class Note:
-        pitch: int = 60
-        velocity: float = 1.0
-        duration: float = 1.0
-        start_time: float = 0.0
+    if not BEAT_STUDIO_AVAILABLE:
+        @dataclass
+        class Note:
+            pitch: int = 60
+            velocity: float = 1.0
+            duration: float = 1.0
+            start_time: float = 0.0
 
-    @dataclass
-    class Pattern:
-        notes: list = None
-        length: float = 0.0
-        channel: str = "default"
+        @dataclass
+        class Pattern:
+            notes: list = None
+            length: float = 0.0
+            channel: str = "default"
 
-    class BeatStudioEngine:
-        pass
-    
-    class PresetManager:
-        def __init__(self):
-            self.presets = {}
-    
-    class EffectsProcessor:
-        def apply_effects(self, audio, settings=None):
-            return audio
+        class BeatStudioEngine:
+            pass
 
-    class AudioConstants:
-        SAMPLE_RATE = 44100
-        CHANNELS = 2
-        BUFFER_SIZE = 512
+        class PresetManager:
+            def __init__(self):
+                self.presets = {}
+
+        class EffectsProcessor:
+            def apply_effects(self, audio, settings=None):
+                return audio
+
+        class AudioConstants:
+            SAMPLE_RATE = 44100
+            CHANNELS = 2
+            BUFFER_SIZE = 512
 
 # ============================================================================
 # BEAT STUDIO INTEGRATION CLASS
@@ -397,6 +399,27 @@ class BeatStudioIntegration:
             width=20
         )
         self.generate_btn.pack(side=tk.RIGHT)
+
+        # Instrumental generation button (MusicGen)
+        self.instrumental_btn = ttk.Button(
+            style_frame,
+            text="🌟 Instrumental (Pro)",
+            command=self._generate_instrumental,
+            bootstyle="info",
+            width=24
+        )
+        self.instrumental_btn.pack(side=tk.RIGHT, padx=(0, 10))
+
+        # Full Song generation button
+        self.full_song_btn = ttk.Button(
+            style_frame,
+            text="🎶 Full Song (3 min)",
+            command=self._generate_full_song,
+            bootstyle="warning",
+            width=22
+        )
+        # Place it just to the right of the Instrumental button
+        self.full_song_btn.pack(side=tk.RIGHT, padx=(0, 10))
     
     def _create_pattern_editor(self, parent):
         """Create visual pattern editor."""
@@ -421,7 +444,10 @@ class BeatStudioIntegration:
             'kick': [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
             'snare': [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
             'hihat': [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
-            'openhat': [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1]
+            'openhat': [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+            'clap': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            'bass808': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            'perc': [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         }
         
         self.pattern_buttons = {}
@@ -431,7 +457,10 @@ class BeatStudioIntegration:
             ("🥁 Kick", "kick", "#FF5722"),
             ("🥁 Snare", "snare", "#2196F3"),
             ("🎩 Hi-Hat", "hihat", "#4CAF50"),
-            ("🎩 Open Hat", "openhat", "#FFC107")
+            ("🎩 Open Hat", "openhat", "#FFC107"),
+            ("👏 Clap", "clap", "#E91E63"),
+            ("🔊 808 Bass", "bass808", "#9C27B0"),
+            ("🥁 Perc Loop", "perc", "#009688")
         ]
         
         for inst_name, inst_key, color in instruments:
@@ -455,6 +484,32 @@ class BeatStudioIntegration:
                 )
                 btn.pack(side=tk.LEFT, padx=1)
                 self.pattern_buttons[inst_key].append(btn)
+
+        # Melody roll (12×16)
+        self.melody_grid = [[0 for _ in range(16)] for _ in range(12)]
+        self.melody_buttons = []
+        note_names = ["C5","B4","A#4","A4","G#4","G4","F#4","F4","E4","D#4","D4","C#4"]
+        melody_frame = ttk.LabelFrame(pattern_frame, text="🎶 Melody Roll", padding=5)
+        melody_frame.pack(fill=tk.X, pady=(10, 5))
+        for r, note_name in enumerate(note_names):
+            m_row = ttk.Frame(melody_frame)
+            m_row.pack(fill=tk.X, pady=1)
+            ttk.Label(m_row, text=note_name, width=4).pack(side=tk.LEFT)
+            self.melody_buttons.append([])
+            for c in range(16):
+                btn = tk.Button(
+                    m_row,
+                    text="●" if self.melody_grid[r][c] else "○",
+                    width=2,
+                    height=1,
+                    font=("Arial", 8),
+                    bg="#673AB7" if self.melody_grid[r][c] else "gray80",
+                    fg="white",
+                    relief=tk.FLAT,
+                    command=lambda row=r, col=c: self._toggle_melody(row, col)
+                )
+                btn.pack(side=tk.LEFT, padx=1)
+                self.melody_buttons[r].append(btn)
 
         # Drum source selector
         source_frame = ttk.Frame(parent)
@@ -633,11 +688,6 @@ class BeatStudioIntegration:
         except Exception as e:
             logger.debug(f"Preview error: {e}")
 
-
-
-
-
-
     def _convert_pattern_to_notes(self, channel: str) -> List[Note]:
         """Convert UI pattern to Note objects."""
         notes = []
@@ -647,7 +697,10 @@ class BeatStudioIntegration:
             'kick': 36,  # MIDI kick drum
             'snare': 38,  # MIDI snare
             'hihat': 42,  # MIDI closed hi-hat
-            'openhat': 46  # MIDI open hi-hat
+            'openhat': 46,  # MIDI open hi-hat
+            'clap': 39,  # MIDI hand clap
+            'bass808': 35,  # Acoustic bass drum (808 sub)
+            'perc': 75  # Generic percussion sample
         }
         
         for instrument, pattern in self.patterns.items():
@@ -662,7 +715,29 @@ class BeatStudioIntegration:
                         ))
         
         return notes
-    
+
+    def _toggle_melody(self, row: int, col: int):
+        """Toggle a note in the melody roll grid."""
+        try:
+            self.melody_grid[row][col] = 1 - self.melody_grid[row][col]
+            btn = self.melody_buttons[row][col]
+            active = self.melody_grid[row][col]
+            btn.config(text="●" if active else "○", bg="#673AB7" if active else "gray80")
+        except Exception as e:
+            logger.debug(f"Melody toggle error: {e}")
+
+    def _convert_melody_to_notes(self) -> List[Note]:
+        """Convert the melody roll grid into Note objects for synthesis."""
+        notes: List[Note] = []
+        base_pitch = 72  # MIDI C5 for top row
+        for row_idx, row in enumerate(self.melody_grid):
+            for col_idx, active in enumerate(row):
+                if active:
+                    pitch = base_pitch - row_idx
+                    start_time = col_idx * 0.25  # 16th-note grid
+                    notes.append(Note(pitch, 0.9, 0.25, start_time))
+        return notes
+
     def _update_progress(self, value: float, message: str):
         """Thread-safe progress bar + status update."""
         def _apply():
@@ -924,6 +999,132 @@ def _generate_beat_thread(self, lyrics: str):
         self.generate_btn.config(state=tk.NORMAL, text="🎵 Generate Beat")
 
 # ----------------------------------------------------------------------------
+# Stand-alone wrapper for Full Song button
+# ----------------------------------------------------------------------------
+
+def _generate_full_song(self):
+    """Handle Full Song button click – starts background generation."""
+    lyrics = self.beat_lyrics_text.get("1.0", tk.END).strip()
+    if not lyrics:
+        messagebox.showwarning("No Lyrics", "Enter lyrics to generate a full song!")
+        return
+
+    # Disable controls while generating
+    self.full_song_btn.config(state=tk.DISABLED, text="🎶 Generating...")
+    self.progress_var.set(0)
+    self.status_label.config(text="🎶 Generating full song...")
+
+    thread = threading.Thread(target=self._generate_full_song_thread, args=(lyrics,))
+    thread.daemon = True
+    thread.start()
+
+# ----------------------------------------------------------------------------
+# Stand-alone background thread for full song generation
+# ----------------------------------------------------------------------------
+
+def _generate_full_song_thread(self, lyrics: str):
+    """Background thread that generates a complete 3-minute song."""
+    try:
+        self._update_progress(20, "Analyzing lyrics…")
+        # Tempo
+        self.engine.sequencer.tempo = self.bpm_var.get()
+
+        # Apply pattern from UI (optional but keeps user drums)
+        drum_pattern = Pattern(
+            notes=self._convert_pattern_to_notes('drums'),
+            length=4.0,
+            channel='drums'
+        )
+        self.engine.sequencer.add_pattern('drums', drum_pattern)
+
+        self._update_progress(40, "Generating full song… (this may take a while)")
+        audio_data = self.engine.generate_full_song_from_lyrics(lyrics, length_seconds=180.0)
+
+        self._update_progress(70, "Applying effects…")
+        if getattr(self, 'reverb_var', None) and self.reverb_var.get():
+            audio_data = self.effects_processor.reverb(audio_data, 0.3)
+        if getattr(self, 'compression_var', None) and self.compression_var.get():
+            audio_data = self.effects_processor.compressor(audio_data)
+        audio_data *= getattr(self, 'volume_var', tk.DoubleVar(value=1.0)).get()
+
+        self._update_progress(90, "Finalising…")
+        tmp = tempfile.mktemp(suffix='.wav')
+        self.engine.save_audio(audio_data, tmp)
+        self.current_audio_file = tmp
+        self.current_beat = audio_data  # reuse for playback
+
+        self._update_progress(100, "✅ Full song generated!")
+        self.play_btn.config(state=tk.NORMAL)
+    except Exception as e:
+        logger.error(f"Full song generation failed: {e}")
+        self.status_label.config(text=f"❌ Song generation failed: {str(e)}")
+    finally:
+        self.full_song_btn.config(state=tk.NORMAL, text="🎶 Full Song (3 min)")
+
+# ----------------------------------------------------------------------------
+# Stand-alone wrapper for Instrumental (MusicGen) button
+# ----------------------------------------------------------------------------
+
+def _generate_instrumental(self):
+    """Handle Instrumental (Pro) button click – starts MusicGen generation."""
+    lyrics = self.beat_lyrics_text.get("1.0", tk.END).strip()
+    if not lyrics:
+        messagebox.showwarning("No Lyrics", "Enter some lyrics to generate an instrumental!")
+        return
+
+    # Disable controls while generating
+    self.instrumental_btn.config(state=tk.DISABLED, text="🌟 Generating…")
+    self.progress_var.set(0)
+    self.status_label.config(text="🌟 Generating instrumental…")
+
+    thread = threading.Thread(target=self._generate_instrumental_thread, args=(lyrics,))
+    thread.daemon = True
+    thread.start()
+
+# ----------------------------------------------------------------------------
+# Stand-alone background thread for MusicGen instrumental generation
+# ----------------------------------------------------------------------------
+
+def _generate_instrumental_thread(self, lyrics: str):
+    try:
+        self._update_progress(10, "Analyzing lyrics…")
+        from lyric_analyzer import LyricAnalyzer  # local heuristic analyser
+        analysis = LyricAnalyzer().analyze(lyrics)
+
+        prompt = (
+            f"Instrumental, no vocals. Style: {analysis['drum_pattern']} beat. "
+            f"Mood: {'positive' if analysis['sentiment']>=0 else 'sad'}. "
+            f"Tempo: {analysis['tempo']} BPM."
+        )
+
+        self._update_progress(30, "Running MusicGen…")
+        from musicgen_backend import generate_instrumental
+        wav_path = generate_instrumental(lyrics, prompt, duration=30)
+
+        self._update_progress(70, "Loading audio…")
+        import numpy as np
+        from scipy.io import wavfile
+        sr, audio_data = wavfile.read(wav_path)
+        if audio_data.dtype != np.float32:
+            audio_data = audio_data.astype(np.float32) / np.iinfo(audio_data.dtype).max
+
+        # Apply master volume
+        audio_data *= getattr(self, 'volume_var', tk.DoubleVar(value=1.0)).get()
+
+        self.current_audio_file = wav_path
+        self.current_beat = audio_data
+
+        self._update_progress(100, "✅ Instrumental generated!")
+        self.play_btn.config(state=tk.NORMAL)
+    except Exception as e:
+        logger.error(f"Instrumental generation failed: {e}")
+        self.status_label.config(text=f"❌ Instrumental generation failed: {str(e)}")
+    finally:
+        self.instrumental_btn.config(state=tk.NORMAL, text="🌟 Instrumental (Pro)")
+        self.generate_btn.config(state=tk.NORMAL)
+        self.full_song_btn.config(state=tk.NORMAL)
+
+# ----------------------------------------------------------------------------
 # Stand-alone helper to save the beat
 # ----------------------------------------------------------------------------
 
@@ -1000,6 +1201,38 @@ def _stop_beat(self):
         logger.error(f"Stop error: {e}")
 
 # ----------------------------------------------------------------------------
+# Stand-alone wrapper for Suggest Beat button
+# ----------------------------------------------------------------------------
+
+def _suggest_beat(self):
+    """Analyze lyrics with BeatAdvisor and apply suggestions to the UI."""
+    lyrics = self.beat_lyrics_text.get("1.0", tk.END).strip()
+    if not lyrics:
+        messagebox.showwarning("No Lyrics", "Enter some lyrics first!")
+        return
+    try:
+        suggestion = beat_advisor.suggest_beat(lyrics)
+        # Update controls
+        self.bpm_var.set(suggestion.get('recommended_bpm', self.bpm_var.get()))
+        if isinstance(suggestion.get('drum_pattern'), str):
+            self.pattern_var.set(suggestion['drum_pattern'])
+        # Instrument preset handling
+        instr = suggestion.get('instrument_preset')
+        if instr and instr in self.preset_manager.presets:
+            self.preset_var.set(instr)
+        else:
+            self.preset_var.set('Custom')
+        # Show advice info
+        self.status_label.config(text=(
+            f"💡 Suggested {suggestion.get('recommended_bpm')} BPM, "
+            f"pattern: {suggestion.get('drum_pattern')}, "
+            f"preset: {instr}"
+        ))
+    except Exception as e:
+        logger.error(f"Suggestion failed: {e}")
+        self.status_label.config(text="❌ Suggestion failed")
+
+# ----------------------------------------------------------------------------
 # Internal helper methods for drum samples
 # ----------------------------------------------------------------------------
 def _load_drum_samples(self):
@@ -1016,6 +1249,9 @@ def _load_drum_samples(self):
         'snare': 'snare.wav',
         'hihat': 'hihat.wav',
         'openhat': 'openhat.wav',
+        'clap': 'clap.wav',
+        'bass808': '808.wav',
+        'perc': 'perc_loop.wav',
     }
     for inst, fname in mapping.items():
         path = os.path.join(self.DRUM_SAMPLE_DIR, fname)
@@ -1036,6 +1272,8 @@ _missing_methods = [
     '_update_progress',
     '_play_beat',
     '_generate_beat_thread',
+    '_generate_full_song_thread',
+    '_generate_full_song',
     '_generate_beat',
     '_stop_beat',
     '_convert_pattern_to_notes',
@@ -1058,7 +1296,9 @@ _missing_methods = [
     'create_beat_from_lyrics',
     '_save_beat',
     '_load_drum_samples'
-]
+ ]
+# Register newly added helper methods
+_missing_methods += ['_toggle_melody', '_convert_melody_to_notes', '_generate_instrumental', '_generate_instrumental_thread']
 
 for _m in _missing_methods:
     if _m in globals() and not hasattr(BeatStudioIntegration, _m):
@@ -1070,6 +1310,19 @@ for _m in _missing_methods:
 
 # Create singleton instance
 beat_studio_integration = BeatStudioIntegration()
+
+# -----------------------------------------------------------
+# Optionally enhance with advanced features (melody/chords,
+# side-chain compression, DAW export, etc.)
+# -----------------------------------------------------------
+try:
+    from beat_studio_advanced import enhance_beat_studio_integration  # type: ignore
+    beat_studio_integration = enhance_beat_studio_integration(beat_studio_integration)
+    logger.info("✨ Beat Studio advanced features activated!")
+except ImportError:
+    logger.debug("beat_studio_advanced module not found – using base feature set")
+except Exception as _adv_err:
+    logger.warning(f"Advanced Beat Studio enhancement failed: {_adv_err}")
 
 # Export the integration instance and availability flag
 __all__ = ['beat_studio_integration', 'BEAT_STUDIO_AVAILABLE']
