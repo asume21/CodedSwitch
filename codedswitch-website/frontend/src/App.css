@@ -86,7 +86,7 @@ body {
 }
 
 /* Hero Section */
-.hero {
+.hero, .hero-section {
   padding: 4rem 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -224,7 +224,7 @@ body {
 }
 
 /* Features Section */
-.features {
+.features, .features-section {
   padding: 5rem 0;
   background: white;
 }
@@ -324,7 +324,7 @@ body {
 }
 
 /* Pricing Section */
-.pricing {
+.pricing, .pricing-section {
   padding: 5rem 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;

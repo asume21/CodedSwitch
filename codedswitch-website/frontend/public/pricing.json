@@ -1,0 +1,45 @@
+{
+  "plans": [
+    {
+      "name": "Free",
+      "price": 0,
+      "popular": false,
+      "features": [
+        "8-track drum sequencer",
+        "Standard procedural drum engine",
+        "Local project save / load",
+        "100 lines / day code translation (single-file)",
+        "1 output language",
+        "Basic static scan (style & lint)",
+        "Rate-limited chat bot FAQs"
+      ]
+    },
+    {
+      "name": "Pro",
+      "price": 9,
+      "popular": true,
+      "features": [
+        "16 tracks & mixer (vol / pan / solo)",
+        "WAV / MIDI export + 50 royalty-free kits",
+        "Unlimited project translation (10 languages)",
+        "Batch files & CLI support",
+        "Advanced scan: complexity, duplication, licence checks",
+        "Context-aware IDE assistant",
+        "Priority e-mail support"
+      ]
+    },
+    {
+      "name": "Master",
+      "price": 29,
+      "popular": false,
+      "features": [
+        "VST / AU plugin & Live-performance mode",
+        "AI beat & melody generator, 200+ premium kits",
+        "Real-time cross-language transpile (API & CI)",
+        "Deep scan: security, dependency CVEs, AI refactor",
+        "Custom-trained project chat bot",
+        "Slack support & 1-on-1 onboarding"
+      ]
+    }
+  ]
+}
