@@ -8,8 +8,10 @@
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
-  color: #333;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  /* Stacked backgrounds: logo below, dark translucent overlay on top */
+  background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.85)),
+              url('/codedswitch_logo.png') center / cover no-repeat fixed;
   min-height: 100vh;
 }
 
