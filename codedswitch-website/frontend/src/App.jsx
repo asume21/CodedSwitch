@@ -13,7 +13,7 @@ function App() {
 
   const fetchPricing = async () => {
     try {
-      const response = await fetch('/pricing.json')
+      const response = await fetch('./pricing.json')
       const data = await response.json()
       setPricingPlans(data.plans)
     } catch (error) {
