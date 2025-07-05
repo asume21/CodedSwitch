@@ -120,6 +120,145 @@ app.get('/api/download', (req, res) => {
   });
 });
 
+// Generate lyrics API endpoint
+app.post('/api/generate-lyrics', async (req, res) => {
+  try {
+    const { style, topic, userPlan } = req.body;
+    
+    // In production, integrate with your actual AI lyric generation
+    // For now, return demo lyrics based on style and topic
+    const demoLyrics = generateDemoLyrics(style, topic);
+    
+    res.json({
+      success: true,
+      lyrics: demoLyrics,
+      style: style,
+      topic: topic,
+      generatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error generating lyrics:', error);
+    res.status(500).json({ error: 'Failed to generate lyrics' });
+  }
+});
+
+// Helper function to generate demo lyrics
+function generateDemoLyrics(style, topic) {
+  const topicText = topic || 'technology';
+  
+  const lyricsByStyle = {
+    'boom-bap': `[Verse 1]
+Yo, I'm spitting rhymes about ${topicText}, keeping it real
+Breaking down concepts, that's how I feel
+From the streets to the code, I'm making the deal
+CodedSwitch style, that's the appeal
+
+[Hook]
+${topicText}, that's the name
+Breaking down barriers, playing the game
+From hip-hop to tech, I bridge the gap
+Making music and code, that's the rap`,
+
+    'trap': `[Intro]
+Yeah, yeah, ${topicText} in the building
+Let's go!
+
+[Verse 1]
+808s hitting hard like my ${topicText} innovation
+Stack overflow, but I keep the dedication
+Trap beats and algorithms, that's my combination
+Breaking down barriers, that's my foundation
+
+[Hook]
+${topicText}, that's the wave
+Making moves, that's the way
+From trap to tech, I'm here to stay
+${topicText}, that's the way`,
+
+    'drill': `[Intro]
+${topicText}, drill time
+Let's go!
+
+[Verse 1]
+Drilling through the ${topicText}, breaking down the walls
+Stack overflow, but I never fall
+From UK to US, I'm making the call
+${topicText}, that's the protocol
+
+[Hook]
+Drill time, ${topicText}
+Breaking down the code, that's the fix
+From drill to tech, I'm making the mix
+${topicText}, that's the drill`,
+
+    'melodic': `[Intro]
+Oh, oh, oh
+${topicText}
+
+[Verse 1]
+Melodic flows like the ${topicText} I write
+Making music and tech, shining so bright
+From Python to JavaScript, I translate the light
+${topicText}, making everything right
+
+[Hook]
+Oh, ${topicText}, that's the way
+Making music and code, every day
+From melodic to tech, I'm here to stay
+${topicText}, that's the way`,
+
+    'uk-drill': `[Intro]
+${topicText}, UK drill
+Let's go!
+
+[Verse 1]
+UK drill, that's the style
+Breaking down ${topicText}, going the extra mile
+From London to the world, I'm making the file
+${topicText}, that's the profile
+
+[Hook]
+UK drill, ${topicText}
+Breaking down the code, that's the fix
+From UK to tech, I'm making the mix
+${topicText}, that's the drill`,
+
+    'experimental': `[Intro]
+Experimental, ${topicText}
+Let's go!
+
+[Verse 1]
+Experimental flows, breaking the mold
+Making ${topicText} and tech, that's the goal
+From avant-garde to algorithm, I'm in control
+${topicText}, that's the role
+
+[Hook]
+Experimental, ${topicText}
+Breaking down the code, that's the fix
+From experimental to tech, I'm making the mix
+${topicText}, that's the experimental`,
+
+    'coding-rap': `[Intro]
+Coding rap, ${topicText}
+Let's go!
+
+[Verse 1]
+Coding rap, that's the style
+Breaking down ${topicText}, going the extra mile
+From Python to JavaScript, I'm making the file
+${topicText}, that's the profile
+
+[Hook]
+Coding rap, ${topicText}
+Breaking down the code, that's the fix
+From coding to tech, I'm making the mix
+${topicText}, that's the coding rap`
+  };
+
+  return lyricsByStyle[style] || lyricsByStyle['boom-bap'];
+}
+
 // Get pricing information
 app.get('/api/pricing', (req, res) => {
   res.json({

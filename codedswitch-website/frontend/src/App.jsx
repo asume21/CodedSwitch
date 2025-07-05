@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import './App.css'
+import LyricLab from './components/LyricLab'
 
 function App() {
   const [pricingPlans, setPricingPlans] = useState([])
   const [loading, setLoading] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState(null)
   const [activeTab, setActiveTab] = useState('home')
+  const [navOpen, setNavOpen] = useState(false)
+  const [userPlan, setUserPlan] = useState('free') // Track user subscription
 
   useEffect(() => {
     fetchPricing()
@@ -63,7 +66,13 @@ function App() {
             />
             <h1>CodedSwitch</h1>
           </div>
-          <div className="nav-menu">
+          <button 
+              className="nav-toggle" 
+              onClick={() => setNavOpen(!navOpen)}
+            >
+              &#9776;
+            </button>
+            <div className={`nav-menu ${navOpen ? 'open' : ''}`}>
             <button 
               className={`nav-link ${activeTab === 'home' ? 'active' : ''}`}
               onClick={() => setActiveTab('home')}
@@ -87,6 +96,12 @@ function App() {
               onClick={() => setActiveTab('pricing')}
             >
               Pricing
+            </button>
+            <button 
+              className={`nav-link ${activeTab === 'lyric-lab' ? 'active' : ''}`}
+              onClick={() => setActiveTab('lyric-lab')}
+            >
+              Lyric Lab
             </button>
           </div>
         </div>
@@ -348,6 +363,18 @@ function App() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'lyric-lab' && (
+          <div className="lyric-lab-section">
+            <LyricLab 
+              userPlan={userPlan} 
+              onUsageUpdate={(usage) => {
+                console.log('Lyric usage updated:', usage);
+                // Here you can add logic to sync with backend
+              }}
+            />
           </div>
         )}
       </main>

@@ -5,13 +5,13 @@
       "price": 0,
       "popular": false,
       "features": [
-        "8-track drum sequencer",
-        "Standard procedural drum engine",
+        "3 AI lyrics per day",
+        "5 code translations per day",
+        "Basic beat studio (8 tracks)",
+        "Standard AI assistant (rate-limited)",
+        "Basic security scanning",
         "Local project save / load",
-        "100 lines / day code translation (single-file)",
-        "1 output language",
-        "Basic static scan (style & lint)",
-        "Rate-limited chat bot FAQs"
+        "Community support"
       ]
     },
     {
@@ -19,13 +19,14 @@
       "price": 9,
       "popular": true,
       "features": [
-        "16 tracks & mixer (vol / pan / solo)",
-        "WAV / MIDI export + 50 royalty-free kits",
-        "Unlimited project translation (10 languages)",
-        "Batch files & CLI support",
-        "Advanced scan: complexity, duplication, licence checks",
-        "Context-aware IDE assistant",
-        "Priority e-mail support"
+        "Unlimited AI lyrics",
+        "Unlimited code translations",
+        "Advanced beat studio (16 tracks)",
+        "Premium AI assistant (unlimited)",
+        "Advanced security scanning",
+        "Batch file processing",
+        "Priority email support",
+        "Download full desktop suite"
       ]
     },
     {
@@ -33,12 +34,14 @@
       "price": 29,
       "popular": false,
       "features": [
-        "VST / AU plugin & Live-performance mode",
-        "AI beat & melody generator, 200+ premium kits",
-        "Real-time cross-language transpile (API & CI)",
-        "Deep scan: security, dependency CVEs, AI refactor",
-        "Custom-trained project chat bot",
-        "Slack support & 1-on-1 onboarding"
+        "Everything in Pro",
+        "VST / AU plugin support",
+        "AI beat & melody generator",
+        "Real-time cross-language transpile",
+        "Custom-trained AI assistant",
+        "1-on-1 onboarding",
+        "API access",
+        "White-label solutions"
       ]
     }
   ]

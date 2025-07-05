@@ -544,3 +544,29 @@ body {
 .pricing, .pricing-section {
   background: transparent !important;
 }
+
+/* Mobile Navigation */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.8rem;
+  cursor: pointer;
+}
+@media (max-width: 768px) {
+  .nav-toggle { display: block; }
+  .nav-menu {
+    display: none;
+    flex-direction: column;
+    gap: 1rem;
+    background: #2a0a0a;
+    position: absolute;
+    top: 70px;
+    right: 0;
+    padding: 1rem 2rem;
+    border-radius: 0 0 0 12px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+  }
+  .nav-menu.open { display: flex; }
+}
