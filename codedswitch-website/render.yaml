@@ -1,0 +1,28 @@
+services:
+  # Backend API Service
+  - type: web
+    name: codedswitch-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://codedswitch-frontend.onrender.com
+
+  # Frontend Web Service
+  - type: web
+    name: codedswitch-frontend
+    env: static
+    plan: free
+    buildCommand: npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://codedswitch-backend.onrender.com 

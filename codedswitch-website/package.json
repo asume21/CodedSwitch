@@ -1,0 +1,25 @@
+{
+  "name": "codedswitch-website",
+  "version": "1.0.0",
+  "description": "CodedSwitch Web Platform - Node.js Application",
+  "main": "backend/server.js",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd backend && npm start",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\""
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "codedswitch",
+    "ai",
+    "code-translation",
+    "lyrics",
+    "web-platform"
+  ],
+  "author": "CodedSwitch Team",
+  "license": "UNLICENSED",
+  "private": true
+} 
