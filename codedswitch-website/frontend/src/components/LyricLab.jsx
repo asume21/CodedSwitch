@@ -6,8 +6,10 @@ const LyricLab = ({ userPlan = 'free', onUsageUpdate }) => {
   const [topic, setTopic] = useState('');
   const [generatedLyrics, setGeneratedLyrics] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [dailyUsage, setDailyUsage] = useState(0);
+  const [userSubscription, setUserSubscription] = useState(null);
+  const [userUsage, setUserUsage] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const rapStyles = [
     { id: 'boom-bap', name: 'Boom Bap', description: 'Classic 90s hip-hop style' },
@@ -19,21 +21,37 @@ const LyricLab = ({ userPlan = 'free', onUsageUpdate }) => {
     { id: 'coding-rap', name: 'Coding Rap', description: 'Tech and programming themes' }
   ];
 
-  const freeDailyLimit = 3;
-  const proDailyLimit = 50;
-
   useEffect(() => {
-    // Load daily usage from localStorage
-    const today = new Date().toDateString();
-    const savedUsage = localStorage.getItem(`lyricUsage_${today}`);
-    if (savedUsage) {
-      setDailyUsage(parseInt(savedUsage));
-    }
+    fetchUserSubscription();
   }, []);
 
+  const fetchUserSubscription = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/user/subscription?userId=anonymous`);
+      const data = await response.json();
+      setUserSubscription(data.subscription);
+      setUserUsage(data.usage);
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+      // Fallback to free plan
+      setUserSubscription({
+        plan: 'free',
+        name: 'Free',
+        monthlyLyrics: 5,
+        features: ['5 Lyric Generations per Month', 'Basic Code Translation', 'Community Support']
+      });
+      setUserUsage({
+        lyricsGenerated: 0,
+        lastReset: new Date().toISOString().slice(0, 7)
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const canGenerate = () => {
-    const limit = userPlan === 'pro' ? proDailyLimit : freeDailyLimit;
-    return dailyUsage < limit;
+    if (!userSubscription || !userUsage) return false;
+    return userUsage.lyricsGenerated < userSubscription.monthlyLyrics;
   };
 
   const generateLyrics = async () => {
@@ -51,7 +69,7 @@ const LyricLab = ({ userPlan = 'free', onUsageUpdate }) => {
 
     try {
       // API call to your backend
-      const response = await fetch('http://localhost:5000/api/generate-lyrics', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/generate-lyrics`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +77,7 @@ const LyricLab = ({ userPlan = 'free', onUsageUpdate }) => {
         body: JSON.stringify({
           style: selectedStyle,
           topic: topic,
-          userPlan: userPlan
+          userId: 'anonymous'
         })
       });
 
@@ -67,28 +85,27 @@ const LyricLab = ({ userPlan = 'free', onUsageUpdate }) => {
         const data = await response.json();
         setGeneratedLyrics(data.lyrics);
         
-        // Update usage
-        const newUsage = dailyUsage + 1;
-        setDailyUsage(newUsage);
-        const today = new Date().toDateString();
-        localStorage.setItem(`lyricUsage_${today}`, newUsage.toString());
+        // Update usage from response
+        if (data.usage) {
+          setUserUsage(data.usage);
+        }
         
         if (onUsageUpdate) {
-          onUsageUpdate(newUsage);
+          onUsageUpdate(data.usage?.lyricsGenerated || 0);
+        }
+      } else if (response.status === 403) {
+        const errorData = await response.json();
+        if (errorData.upgradeRequired) {
+          setShowUpgradeModal(true);
+        } else {
+          throw new Error(errorData.message || 'Failed to generate lyrics');
         }
       } else {
         throw new Error('Failed to generate lyrics');
       }
     } catch (error) {
       console.error('Error generating lyrics:', error);
-      // Fallback to demo lyrics for now
-      setGeneratedLyrics(generateDemoLyrics());
-      
-      // Update usage even for demo
-      const newUsage = dailyUsage + 1;
-      setDailyUsage(newUsage);
-      const today = new Date().toDateString();
-      localStorage.setItem(`lyricUsage_${today}`, newUsage.toString());
+      alert(error.message || 'Failed to generate lyrics. Please try again.');
     }
 
     setIsGenerating(false);
@@ -223,6 +240,14 @@ CodedSwitch, that's the coding rap`
     URL.revokeObjectURL(url);
   };
 
+  if (loading) {
+    return (
+      <div className="lyric-lab">
+        <div className="loading">Loading Lyric Lab...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="lyric-lab">
       <div className="lyric-lab-header">
@@ -231,9 +256,9 @@ CodedSwitch, that's the coding rap`
         
         <div className="usage-info">
           <span className="usage-text">
-            Daily Usage: {dailyUsage} / {userPlan === 'pro' ? proDailyLimit : freeDailyLimit}
+            Monthly Usage: {userUsage?.lyricsGenerated || 0} / {userSubscription?.monthlyLyrics || 5}
           </span>
-          {userPlan === 'free' && (
+          {userSubscription?.plan === 'free' && (
             <button 
               className="upgrade-btn"
               onClick={() => setShowUpgradeModal(true)}
@@ -302,19 +327,19 @@ CodedSwitch, that's the coding rap`
       {showUpgradeModal && (
         <div className="modal-overlay">
           <div className="upgrade-modal">
-            <h3>🚀 Upgrade to Pro!</h3>
-            <p>You've reached your daily limit of {freeDailyLimit} lyrics.</p>
-            <p>Upgrade to Pro for unlimited lyrics and advanced features!</p>
+            <h3>🚀 Upgrade Your Plan!</h3>
+            <p>You've reached your monthly limit of {userSubscription?.monthlyLyrics || 5} lyrics.</p>
+            <p>Upgrade to unlock more generations and advanced features!</p>
             <div className="modal-actions">
               <button 
                 className="upgrade-btn"
                 onClick={() => {
                   setShowUpgradeModal(false);
                   // Navigate to pricing page
-                  window.location.href = '#pricing';
+                  window.location.href = '/pricing';
                 }}
               >
-                Upgrade Now
+                View Plans
               </button>
               <button 
                 className="cancel-btn"
