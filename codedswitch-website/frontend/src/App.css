@@ -8,10 +8,9 @@
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
-  color: #fff;
-  /* Stacked backgrounds: logo below, dark translucent overlay on top */
-  background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.85)),
-              url('/codedswitch_logo.png') center / cover no-repeat fixed;
+  color: #111 !important;
+  background: #fff !important;
+  background-image: none !important;
   min-height: 100vh;
 }
 
@@ -495,8 +494,10 @@ body {
   height: auto;
   border-radius: 18px;
   box-shadow: 0 4px 32px rgba(0,0,0,0.12), 0 1.5px 6px rgba(0,0,0,0.10);
-  background: #1a1a1a;
+  background: none !important;
   padding: 1.2rem;
+  filter: none !important;
+  opacity: 1 !important;
 }
 
 @media (max-width: 600px) {
@@ -516,10 +517,12 @@ body {
   margin-right: 1rem;
   vertical-align: middle;
   border-radius: 10px;
-  background: #1a1a1a;
+  background: none !important;
   box-shadow: 0 2px 12px rgba(0,0,0,0.10);
   padding: 0.4rem;
   display: inline-block;
+  filter: none !important;
+  opacity: 1 !important;
 }
 
 @media (max-width: 600px) {

@@ -5,6 +5,7 @@ import LyricLab from './components/LyricLab'
 import CodeTranslator from './components/CodeTranslator'
 import Pricing from './components/Pricing'
 import Success from './components/Success'
+import About from './components/About'
 
 function AppContent() {
   const [pricingPlans, setPricingPlans] = useState([])
@@ -369,6 +370,7 @@ function AppContent() {
           </div>
           } />
 
+          <Route path="/about" element={<About />} />
           <Route path="/features" element={
             <div className="features-section">
               <h2>🎯 Complete Feature Overview</h2>
@@ -547,7 +549,7 @@ function AppContent() {
           <Route path="/code-translator" element={
             <div className="code-translator-section">
               <CodeTranslator 
-                userSubscription={userSubscription}
+                userSubscription={{ plan: userPlan }}
               />
             </div>
           } />

@@ -1,0 +1,48 @@
+{
+  "plans": [
+    {
+      "name": "Free",
+      "price": 0,
+      "popular": false,
+      "features": [
+        "3 AI lyrics per day",
+        "5 code translations per day",
+        "Basic beat studio (8 tracks)",
+        "Standard AI assistant (rate-limited)",
+        "Basic security scanning",
+        "Local project save / load",
+        "Community support"
+      ]
+    },
+    {
+      "name": "Pro",
+      "price": 9,
+      "popular": true,
+      "features": [
+        "Unlimited AI lyrics",
+        "Unlimited code translations",
+        "Advanced beat studio (16 tracks)",
+        "Premium AI assistant (unlimited)",
+        "Advanced security scanning",
+        "Batch file processing",
+        "Priority email support",
+        "Download full desktop suite"
+      ]
+    },
+    {
+      "name": "Master",
+      "price": 29,
+      "popular": false,
+      "features": [
+        "Everything in Pro",
+        "VST / AU plugin support",
+        "AI beat & melody generator",
+        "Real-time cross-language transpile",
+        "Custom-trained AI assistant",
+        "1-on-1 onboarding",
+        "API access",
+        "White-label solutions"
+      ]
+    }
+  ]
+}
