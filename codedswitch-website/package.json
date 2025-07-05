@@ -6,7 +6,8 @@
   "scripts": {
     "build": "cd frontend && npm install && npm run build",
     "start": "cd backend && npm start",
-    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\""
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "postinstall": "cd frontend && npm install"
   },
   "engines": {
     "node": ">=16.0.0",
@@ -17,9 +18,15 @@
     "ai",
     "code-translation",
     "lyrics",
-    "web-platform"
+    "web-platform",
+    "nodejs",
+    "react"
   ],
   "author": "CodedSwitch Team",
   "license": "UNLICENSED",
-  "private": true
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asume21/CodedSwitch.git"
+  }
 } 

@@ -4,8 +4,8 @@ services:
     name: codedswitch-backend
     env: node
     plan: free
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: chmod +x deploy.sh && ./deploy.sh
+    startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -21,7 +21,7 @@ services:
     name: codedswitch-frontend
     env: static
     plan: free
-    buildCommand: npm run build
+    buildCommand: chmod +x deploy.sh && ./deploy.sh
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
