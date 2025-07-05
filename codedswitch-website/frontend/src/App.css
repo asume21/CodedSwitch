@@ -569,4 +569,28 @@ body {
     box-shadow: 0 6px 16px rgba(0,0,0,0.3);
   }
   .nav-menu.open { display: flex; }
+
+/* Interactive Hero Windows */
+.platform-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  perspective: 1000px;
+}
+
+.interactive-window {
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  cursor: pointer;
+}
+
+.interactive-window:hover {
+  transform: translateY(-12px) scale(1.05) rotateX(3deg) rotateY(-3deg);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.45);
+}
+
+@media (max-width: 768px) {
+  .platform-preview {
+    grid-template-columns: 1fr;
+  }
+}
 }

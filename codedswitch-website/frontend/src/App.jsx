@@ -136,7 +136,7 @@ function App() {
             </div>
             <div className="hero-visual">
               <div className="platform-preview">
-                <div className="code-window">
+                <div className="code-window interactive-window" onClick={() => setActiveTab('features')}>
                   <div className="window-header">
                     <span>💻 Code Translation</span>
                   </div>
@@ -144,7 +144,7 @@ function App() {
                     <pre>Python → JavaScript</pre>
                   </div>
                 </div>
-                <div className="lyric-window">
+                <div className="lyric-window interactive-window" onClick={() => setActiveTab('features')}>
                   <div className="window-header">
                     <span>🎤 Lyric Lab</span>
                   </div>
@@ -152,7 +152,7 @@ function App() {
                     <pre>AI Rap Generation</pre>
                   </div>
                 </div>
-                <div className="beat-window">
+                <div className="beat-window interactive-window" onClick={() => setActiveTab('pricing')}>
                   <div className="window-header">
                     <span>🎧 Beat Analysis</span>
                   </div>
