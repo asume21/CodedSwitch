@@ -365,3 +365,13 @@ MIT License - Feel free to use in personal and commercial projects!
 ---
 
 *Built with ❤️ by passionate developers who believe great tools should be accessible to everyone.*
+
+## ⚠️ Large Files & Soundfonts
+
+**Important:** Large files such as soundfonts (e.g., `Soundfonts/MuseScore_General.sf2`) are NOT tracked in this repository due to GitHub's file size limits. You must keep these files locally on your machine.
+
+- If you need the soundfont for music features, download or copy it into the `Soundfonts/` folder manually.
+- Do NOT add or commit large files to git. This keeps the repo fast and deployable.
+- If you are collaborating, share large files via cloud storage (Google Drive, Dropbox, etc.) or direct download links.
+
+*The app will still work for code translation, lyric generation, and other features without the soundfont file.*
