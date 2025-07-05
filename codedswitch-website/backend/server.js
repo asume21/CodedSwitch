@@ -22,12 +22,189 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Store successful payments (in production, use a database)
+// Store successful payments and user subscriptions (in production, use a database)
 const successfulPayments = new Set();
+const userSubscriptions = new Map();
+const userUsage = new Map();
+
+// Subscription plans
+const SUBSCRIPTION_PLANS = {
+  free: {
+    name: 'Free',
+    price: 0,
+    monthlyLyrics: 5,
+    features: ['5 Lyric Generations per Month', 'Basic Code Translation', 'Community Support']
+  },
+  basic: {
+    name: 'Basic',
+    price: 9.99,
+    monthlyLyrics: 50,
+    features: ['50 Lyric Generations per Month', 'Advanced Code Translation', 'Email Support', 'Priority Features']
+  },
+  pro: {
+    name: 'Professional',
+    price: 19.99,
+    monthlyLyrics: 200,
+    features: ['200 Lyric Generations per Month', 'All Code Translation Features', 'Priority Support', 'Beat Studio Access', 'AI Assistant']
+  },
+  enterprise: {
+    name: 'Enterprise',
+    price: 49.99,
+    monthlyLyrics: 1000,
+    features: ['Unlimited Lyric Generations', 'All Features', 'Dedicated Support', 'Custom Integrations', 'API Access']
+  }
+};
+
+// Helper function to get user usage
+function getUserUsage(userId) {
+  if (!userUsage.has(userId)) {
+    userUsage.set(userId, {
+      lyricsGenerated: 0,
+      lastReset: new Date().toISOString().slice(0, 7) // YYYY-MM format
+    });
+  }
+  
+  const usage = userUsage.get(userId);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  
+  // Reset usage if it's a new month
+  if (usage.lastReset !== currentMonth) {
+    usage.lyricsGenerated = 0;
+    usage.lastReset = currentMonth;
+  }
+  
+  return usage;
+}
+
+// Helper function to get user subscription
+function getUserSubscription(userId) {
+  return userSubscriptions.get(userId) || { plan: 'free', ...SUBSCRIPTION_PLANS.free };
+}
 
 // Routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'CodedSwitch API is running' });
+});
+
+// Get subscription plans
+app.get('/api/subscription-plans', (req, res) => {
+  res.json({
+    plans: Object.entries(SUBSCRIPTION_PLANS).map(([id, plan]) => ({
+      id,
+      ...plan
+    }))
+  });
+});
+
+// Get user subscription status
+app.get('/api/user/subscription', (req, res) => {
+  const userId = req.query.userId || 'anonymous';
+  const subscription = getUserSubscription(userId);
+  const usage = getUserUsage(userId);
+  
+  res.json({
+    subscription,
+    usage,
+    canGenerateLyrics: usage.lyricsGenerated < subscription.monthlyLyrics
+  });
+});
+
+// Create subscription checkout session
+app.post('/api/create-checkout-session', async (req, res) => {
+  try {
+    const { planId, userId, successUrl, cancelUrl } = req.body;
+    
+    if (!SUBSCRIPTION_PLANS[planId]) {
+      return res.status(400).json({ error: 'Invalid plan' });
+    }
+    
+    if (!stripe) {
+      // Simulate checkout for development
+      const mockSession = {
+        id: 'cs_mock_' + Date.now(),
+        url: successUrl || 'http://localhost:3000/success'
+      };
+      
+      res.json({ sessionId: mockSession.id, url: mockSession.url });
+      return;
+    }
+    
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `CodedSwitch ${SUBSCRIPTION_PLANS[planId].name} Plan`,
+              description: `Monthly subscription for ${SUBSCRIPTION_PLANS[planId].name} plan`,
+            },
+            unit_amount: Math.round(SUBSCRIPTION_PLANS[planId].price * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: successUrl || `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl || `${process.env.FRONTEND_URL}/pricing`,
+      metadata: {
+        userId: userId || 'anonymous',
+        planId: planId
+      }
+    });
+
+    res.json({ sessionId: session.id, url: session.url });
+  } catch (error) {
+    console.error('Error creating checkout session:', error);
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
+// Handle subscription webhook (for production)
+app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!stripe) {
+    return res.status(200).json({ received: true });
+  }
+  
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed':
+      const session = event.data.object;
+      const userId = session.metadata.userId;
+      const planId = session.metadata.planId;
+      
+      // Update user subscription
+      userSubscriptions.set(userId, {
+        plan: planId,
+        ...SUBSCRIPTION_PLANS[planId],
+        subscribedAt: new Date().toISOString(),
+        stripeCustomerId: session.customer
+      });
+      
+      console.log(`User ${userId} subscribed to ${planId} plan`);
+      break;
+      
+    case 'customer.subscription.deleted':
+      const subscription = event.data.object;
+      // Handle subscription cancellation
+      console.log('Subscription cancelled:', subscription.id);
+      break;
+      
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({ received: true });
 });
 
 // Create payment intent for subscription
@@ -120,27 +297,170 @@ app.get('/api/download', (req, res) => {
   });
 });
 
-// Generate lyrics API endpoint
+// Generate lyrics API endpoint with usage tracking
 app.post('/api/generate-lyrics', async (req, res) => {
   try {
-    const { style, topic, userPlan } = req.body;
+    const { style, topic, userId } = req.body;
+    
+    // Get user subscription and usage
+    const subscription = getUserSubscription(userId || 'anonymous');
+    const usage = getUserUsage(userId || 'anonymous');
+    
+    // Check if user can generate more lyrics
+    if (usage.lyricsGenerated >= subscription.monthlyLyrics) {
+      return res.status(403).json({
+        error: 'Monthly limit reached',
+        message: `You've reached your monthly limit of ${subscription.monthlyLyrics} lyric generations.`,
+        upgradeRequired: true,
+        currentPlan: subscription.name,
+        usage: usage
+      });
+    }
     
     // In production, integrate with your actual AI lyric generation
     // For now, return demo lyrics based on style and topic
     const demoLyrics = generateDemoLyrics(style, topic);
+    
+    // Update usage
+    usage.lyricsGenerated += 1;
+    userUsage.set(userId || 'anonymous', usage);
     
     res.json({
       success: true,
       lyrics: demoLyrics,
       style: style,
       topic: topic,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
+      usage: {
+        ...usage,
+        remaining: subscription.monthlyLyrics - usage.lyricsGenerated
+      }
     });
   } catch (error) {
     console.error('Error generating lyrics:', error);
     res.status(500).json({ error: 'Failed to generate lyrics' });
   }
 });
+
+// Translate code API endpoint
+app.post('/api/translate-code', async (req, res) => {
+  try {
+    const { sourceCode, sourceLanguage, targetLanguage, userId } = req.body;
+    
+    if (!sourceCode || !sourceLanguage || !targetLanguage) {
+      return res.status(400).json({ error: 'Missing required parameters' });
+    }
+    
+    // Get user subscription and usage
+    const subscription = getUserSubscription(userId || 'anonymous');
+    const usage = getUserUsage(userId || 'anonymous');
+    
+    // Check if user can translate more code (different limit for code translation)
+    const codeTranslationLimit = subscription.plan === 'free' ? 10 : 100;
+    if (usage.codeTranslations >= codeTranslationLimit) {
+      return res.status(403).json({
+        error: 'Monthly limit reached',
+        message: `You've reached your monthly limit of ${codeTranslationLimit} code translations.`,
+        upgradeRequired: true,
+        currentPlan: subscription.name,
+        usage: usage
+      });
+    }
+    
+    // In production, integrate with your actual AI code translation service
+    // For now, return demo translation
+    const translatedCode = generateDemoCodeTranslation(sourceCode, sourceLanguage, targetLanguage);
+    
+    // Update usage
+    usage.codeTranslations = (usage.codeTranslations || 0) + 1;
+    userUsage.set(userId || 'anonymous', usage);
+    
+    res.json({
+      success: true,
+      translatedCode: translatedCode,
+      sourceLanguage: sourceLanguage,
+      targetLanguage: targetLanguage,
+      translatedAt: new Date().toISOString(),
+      usage: {
+        ...usage,
+        remaining: codeTranslationLimit - usage.codeTranslations
+      }
+    });
+  } catch (error) {
+    console.error('Error translating code:', error);
+    res.status(500).json({ error: 'Failed to translate code' });
+  }
+});
+
+// Helper function to generate demo code translation
+function generateDemoCodeTranslation(sourceCode, sourceLanguage, targetLanguage) {
+  const translations = {
+    'python-javascript': (code) => {
+      return code
+        .replace(/def /g, 'function ')
+        .replace(/if /g, 'if (')
+        .replace(/:/g, ') {')
+        .replace(/print\(/g, 'console.log(')
+        .replace(/range\(/g, 'Array.from({length: ')
+        .replace(/\)/g, '}, (_, i) => i)')
+        .replace(/for /g, 'for (let ')
+        .replace(/ in /g, ' of ')
+        .replace(/return /g, 'return ')
+        .replace(/def /g, 'function ')
+        .replace(/None/g, 'null')
+        .replace(/True/g, 'true')
+        .replace(/False/g, 'false');
+    },
+    'javascript-python': (code) => {
+      return code
+        .replace(/function /g, 'def ')
+        .replace(/console\.log\(/g, 'print(')
+        .replace(/let /g, '')
+        .replace(/const /g, '')
+        .replace(/var /g, '')
+        .replace(/for \(let /g, 'for ')
+        .replace(/ of /g, ' in ')
+        .replace(/null/g, 'None')
+        .replace(/true/g, 'True')
+        .replace(/false/g, 'False')
+        .replace(/;/g, '')
+        .replace(/{/g, ':')
+        .replace(/}/g, '');
+    },
+    'python-java': (code) => {
+      return `public class Main {
+    ${code
+      .replace(/def /g, 'public static ')
+      .replace(/print\(/g, 'System.out.println(')
+      .replace(/range\(/g, 'IntStream.range(0, ')
+      .replace(/for /g, 'for (int ')
+      .replace(/ in /g, ' = 0; ')
+      .replace(/:/g, ' < ')
+      .replace(/None/g, 'null')
+      .replace(/True/g, 'true')
+      .replace(/False/g, 'false')
+    }
+    
+    public static void main(String[] args) {
+        // Your code here
+    }
+}`;
+    }
+  };
+  
+  const key = `${sourceLanguage}-${targetLanguage}`;
+  const translator = translations[key];
+  
+  if (translator) {
+    return translator(sourceCode);
+  }
+  
+  // Fallback translation
+  return `// Translation from ${sourceLanguage} to ${targetLanguage}
+// Demo translation - connect to AI service for real translation
+
+${sourceCode}`;
+}
 
 // Helper function to generate demo lyrics
 function generateDemoLyrics(style, topic) {

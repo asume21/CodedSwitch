@@ -1,0 +1,122 @@
+/* Timeline About Page Styles */
+.about-timeline-section {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 4rem 1rem;
+}
+
+.about-timeline-section h2 {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 3rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* The vertical line */
+.timeline {
+  position: relative;
+  padding: 2rem 0;
+}
+
+.timeline::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Container around content */
+.timeline-container {
+  padding: 1.5rem 3rem;
+  position: relative;
+  width: 50%;
+}
+
+/* Left containers */
+.timeline-container.left {
+  left: 0;
+  text-align: right;
+}
+
+/* Right containers */
+.timeline-container.right {
+  left: 50%;
+}
+
+/* Content */
+.timeline-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Icon circle */
+.timeline-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Arrows */
+.timeline-container.left .timeline-content::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  right: -8px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: transparent transparent transparent white;
+}
+
+.timeline-container.right .timeline-content::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: -8px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: transparent white transparent transparent;
+}
+
+.timeline-content h3 {
+  margin-top: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.timeline-content p {
+  margin: 0.5rem 0 0;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .timeline::after {
+    left: 24px;
+  }
+  .timeline-container {
+    width: 100%;
+    padding-left: 56px;
+    padding-right: 1rem;
+    text-align: left !important;
+  }
+  .timeline-container.right {
+    left: 0%;
+  }
+  .timeline-container.left .timeline-content::after,
+  .timeline-container.right .timeline-content::after {
+    left: -8px;
+    right: auto;
+    border-color: transparent white transparent transparent;
+  }
+}
